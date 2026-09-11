@@ -1,0 +1,2211 @@
+/* ---------------------------------------------------------------------------
+   Panel de gestion — El Rincon del Quijote
+   ---------------------------------------------------------------------------
+   Todos los valores salen de design/rincon-panel.html, que es la fuente de
+   verdad del diseno. Los colores vienen SIEMPRE de compartido/css/tokens.css:
+   aqui no hay ni un hexadecimal suelto.
+
+   Dos apuntes sobre lo que se ha cambiado respecto a la maqueta, y por que:
+
+   1. LOS ROTULOS DE LA BARRA INFERIOR van en --apagado y no en el #A2917F de la
+      maqueta. Ese gris sobre blanco da 3,0:1 y son textos de 12,5 px: por
+      debajo del 4,5:1 que exige WCAG AA, y encima es la navegacion principal
+      del panel. Mismo criterio con el que se oscurecio --apagado en la fase 1
+      (DECISIONES.md, D-17). El pie del acceso, por lo mismo.
+
+   2. NO HAY MARCO DE MOVIL. La maqueta dibuja las pantallas dentro de un iPhone
+      de 390 px para poder ensenar ocho a la vez; eso es la lamina, no el
+      producto. Aqui la pantalla ocupa lo que le den, con el tope de 720 px de
+      --ancho-max que ya usa la carta publica (seccion 3: no hay un segundo
+      layout para escritorio).
+--------------------------------------------------------------------------- */
+
+/* --- Medidas propias del panel -------------------------------------------
+   Ancho de la palanca del interruptor. Se declara AQUI y no en
+   compartido/css/tokens.css, y no es una cuestion de orden:
+
+     tokens.css  ->  Cache-Control: public, max-age=2592000   (30 dias)
+     panel.css   ->  Cache-Control: no-cache                  (siempre fresco)
+
+   Una variable declarada alli y usada aqui le llega rota a cualquiera que ya
+   hubiera abierto el panel antes: el navegador junta el CSS nuevo con el tokens
+   de hace semanas, `var(--ancho-palanca)` se queda sin valor, `width` cae a
+   `auto` y la palanca —que es un <span> vacio— colapsa a 0 px. Se veia como un
+   interruptor sin pildora ni color, cortado contra el borde derecho, y con la
+   cabecera de precios descuadrada. Paso de verdad. Ver DECISIONES.md, D-84.
+
+   REGLA: lo que solo usa el panel se declara en el panel. Y por si acaso, todos
+   los usos llevan respaldo —`var(--ancho-palanca, 46px)`—, para que ni una
+   variable perdida pueda volver a dejar el interruptor en nada. */
+:root {
+  --ancho-palanca: 46px;
+
+  /* --- Escala de espaciado (bloque 1) ---------------------------------
+     Rejilla de 4 px, seis escalones y NADA fuera de ellos. Sustituye a
+     --e-1..--e-7 de tokens.css, que se queda para la carta publica: son dos
+     aplicaciones con dos rejillas y mezclarlas era justo el problema.
+     Se declara AQUI por la regla de arriba (D-84): panel.css va sin cache y
+     tokens.css con treinta dias, asi que una variable del panel usada en el
+     panel tiene que vivir en el panel. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* --- Escala tipografica ----------------------------------------------
+     Cinco cuerpos de texto. Los decimales de --t-* (14,5 / 15,5) venian de
+     medir la maqueta y no los distinguia nadie: aqui se redondean. */
+  --fs-caption: 12px;
+  --fs-small:   13px;
+  --fs-body:    15px;
+  --fs-lead:    17px;
+  --fs-title:   20px;
+
+  /* Dos cuerpos de EXPOSICION, fuera de la escala de texto y a proposito.
+     No son texto: son el nombre del bar en el acceso, el saludo en Cormorant
+     y los numeros grandes de las casillas. Aplastarlos a 20 px habria borrado
+     la jerarquia de la maqueta, que no se toca. Solo dos escalones, y todo lo
+     que habia entre 25 y 32 px cae en uno de los dos. */
+  --fs-display:    25px;
+  --fs-display-lg: 30px;
+
+  /* --- Interlineado ----------------------------------------------------
+     --lh-tight para cabeceras, datos y avisos cortos; --lh-body solo para
+     texto corrido de verdad. */
+  --lh-tight: 1.25;
+  --lh-body:  1.5;
+
+  /* Los dos colores del gráfico de estadísticas, por la misma razón de arriba:
+     solo los usa el panel, así que se declaran aquí y no en tokens.css.
+     Salen tal cual de design/rincon-panel.html (.col .b y .rank .p). */
+  --barra-suave:   #C77179;   /* barra de un día normal */
+  --puesto-numero: #C6B49B;   /* el 1, 2, 3 del ranking */
+}
+
+body {
+  background: var(--fondo-panel);
+}
+
+/* El panel es una aplicacion, no un documento: ocupa la ventana entera y lo que
+   se desplaza es la zona de contenido, no la pagina. Asi la barra inferior se
+   queda donde llega el pulgar y no baila al hacer scroll. */
+#app {
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin-inline: auto;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--fondo-panel);
+}
+
+.pantalla {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.pantalla__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Margen lateral del panel: 18 px, distinto del de la carta a proposito. */
+.margen { padding-inline: var(--sp-4); }
+.margen--alto { padding-top: var(--sp-4); }
+
+/* Dos pesos en todo el panel y ni uno mas: normal y 500. El navegador pone
+   700 a <b> y <strong> por su cuenta, y el panel pinta doce, asi que sin esta
+   regla la regla de los dos pesos se incumple sola. */
+b, strong { font-weight: 500; }
+
+/* --- Cifras alineadas ------------------------------------------------------
+   Toda hora, duracion, precio, telefono y contador va en cifras de ancho fijo.
+   Sin esto una columna de horas baila: en Alegreya Sans el 1 es mucho mas
+   estrecho que el 8, y "08:00" y "11:00" no acaban a la misma altura.
+
+   Se usa de dos maneras: la clase .num para lo que se pinta desde el JS, y la
+   lista de abajo para lo que ya tiene su propia clase y siempre lleva cifras.
+   La lista es explicita a proposito; no se hereda al panel entero porque en
+   texto corrido las cifras proporcionales se leen mejor. */
+.num,
+.reserva__hora, .reserva__mesa,
+.fichaje__hora,
+.tira__numero, .tira__dia,
+.casilla__numero,
+.puesto__numero, .puesto__valor,
+.dia-blq__horas,
+.turno__rango,
+.fila-horas,
+.columnas-precio span,
+.fila-plato__precios, .fila-plato__terraza,
+.grupo__cuenta, .grupo__telefono,
+.ficha__telefono, .ficha__cuando,
+.resultado__dia,
+.recuento-banda__cuenta, .recuento-banda__cifras,
+.fila-prod__pendiente,
+.fila-cuenta__pie, .fila-pedido__pie, .pedido-cabeza__pie,
+.grafico__pie, .grafico__leyenda,
+.saludo__fecha,
+.semana__titulo, .mes__nombre,
+.tarjeta__cuenta,
+.resumen-ficha__linea,
+.falta__pie {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   VACIO, CARGANDO Y ERROR
+   Ver panel/js/piezas/estados.js.
+   ========================================================================== */
+
+.estado {
+  padding: var(--sp-6) var(--sp-4);
+  text-align: center;
+}
+.estado__texto {
+  margin: 0;
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: var(--fs-lead);
+  line-height: var(--lh-tight);
+  color: var(--apagado);
+}
+.estado__pie {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-small);
+  line-height: var(--lh-tight);
+  color: var(--tenue);
+}
+/* El boton de crear que ya existe arriba, traido a donde esta mirando quien
+   acaba de encontrarse la lista vacia. */
+.estado__accion { margin-top: var(--sp-4); display: flex; justify-content: center; }
+.estado__accion .btn { width: auto; }
+
+.estado--fallo .estado__texto { color: var(--granate); font-style: normal; font-family: inherit; }
+
+/* --- Esqueletos ------------------------------------------------------------
+   La silueta de lo que va a aparecer. Deja el sitio hecho, asi que cuando
+   llegan los datos no salta nada de sitio. */
+.hueso {
+  display: block;
+  background: var(--neutro-bg);
+  border-radius: var(--radio);
+  height: 10px;
+}
+.hueso-fila { padding: var(--sp-3) var(--sp-4); }
+.hueso-fila--precio { display: flex; align-items: center; gap: var(--sp-3); }
+.hueso-fila__cuerpo { flex: 1; min-width: 0; }
+
+.hueso--titulo  { width: 58%; height: 13px; margin-bottom: var(--sp-2); }
+.hueso--pie     { width: 38%; }
+.hueso--precio  { width: 44px; height: 13px; flex: none; }
+.hueso--rotulo  { width: 34%; height: 12px; margin: var(--sp-5) 0 var(--sp-2); }
+.hueso--dia     { width: 42%; height: 15px; }
+.hueso--resumen { width: 30%; }
+.hueso--nombre  { width: 56px; flex: none; height: 12px; }
+.hueso--eje     { width: 100%; height: 10px; border-radius: var(--radio-pildora); }
+.hueso--numero  { width: 46px; height: 26px; margin: 0 auto var(--sp-2); }
+
+.casillas .hueso--pie { width: 60%; margin: 0 auto; }
+
+/* Un latido lento y muy suave: dice «esto viene en camino» sin llamar la
+   atencion. Quien pide menos movimiento no lo tiene. */
+@keyframes hueso-late { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: no-preference) {
+  .hueso { animation: hueso-late 1.6s ease-in-out infinite; }
+}
+
+.cargando,
+.vacio {
+  padding: var(--sp-4);
+  color: var(--apagado);
+  font-size: var(--fs-body);
+  text-align: center;
+}
+
+.parrafo {
+  font-size: var(--fs-body);
+  line-height:var(--lh-body);
+  margin-bottom: var(--sp-3);
+}
+.parrafo--apagado { color: var(--apagado); font-size: var(--fs-small); }
+
+/* ==========================================================================
+   CABECERA GRANATE
+   ========================================================================== */
+
+.cabecera {
+  flex: none;
+  background: var(--granate);
+  color: var(--crema);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.cabecera__titulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  flex: 1;
+  min-width: 0;
+}
+
+.cabecera__boton {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  color: inherit;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .28);
+}
+.cabecera__boton--claro {
+  background: var(--crema);
+  color: var(--granate);
+  border-color: var(--crema);
+}
+.cabecera__boton:focus-visible { outline-color: var(--crema); }
+
+/* ==========================================================================
+   BARRA INFERIOR
+   ========================================================================== */
+
+.nav {
+  flex: none;
+  background: var(--blanco);
+  border-top: var(--borde);
+  display: flex;
+  padding: var(--sp-2) var(--sp-1);
+  padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
+}
+
+.nav__ir {
+  flex: 1;
+  text-align: center;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  color: var(--apagado);
+  padding: var(--sp-1) 0;
+  min-height: var(--toque-min);
+}
+.nav__ir--activa { color: var(--granate); font-weight: 500; }
+
+/* El icono de la barra inferior. Antes era un glifo de texto; ahora es el SVG
+   del sprite. `display: block` explicito: .ic es inline-block para poder ir al
+   lado de un texto, y aqui tiene que ir ENCIMA del rotulo. */
+.nav__ir .ic {
+  display: block;
+  margin: 0 auto var(--sp-1);
+}
+
+/* ==========================================================================
+   HOY
+   ========================================================================== */
+
+.saludo { padding: var(--sp-4) var(--sp-4) var(--sp-1); }
+
+.saludo__texto {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: var(--fs-display-lg);
+  font-weight: 500;
+  color: var(--granate-osc);
+}
+.saludo__fecha {
+  font-size: var(--fs-body);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+.casillas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+
+.casilla {
+  background: var(--blanco);
+  border: var(--borde);
+  padding: var(--sp-3);
+}
+.casilla__numero {
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-display-lg);
+  font-weight: 500;
+  line-height: 1;
+}
+.casilla__rotulo {
+  font-size: var(--fs-caption);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+  line-height:var(--lh-tight);
+  font-weight: 500;
+}
+.casilla--acento {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+.casilla--acento .casilla__rotulo { color: rgba(251, 243, 227, .78); }
+
+/* --- Caja de aviso -------------------------------------------------------- */
+
+.aviso {
+  margin: var(--sp-3) var(--sp-4) 0;
+  background: var(--aviso-bg);
+  border: 1px solid var(--aviso-linea);
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  gap: var(--sp-3);
+}
+.aviso__glifo { color: var(--aviso); flex: none; margin-top: 1px; }
+/* INTERLINEADO CORTO. Un aviso son dos frases, no un parrafo: con el
+   interlineado de texto largo se veian desmadejadas y ocupaban el doble. */
+.aviso__texto { font-size: var(--fs-body); line-height: var(--lh-tight); color: var(--aviso-texto); }
+.aviso__texto b { display: block; font-weight: 500; color: var(--aviso); }
+
+/* CADA FRASE EN SU LINEA. Sin esto, el <span> y el boton que va detras salen
+   pegados en el mismo renglon y se leia «...informe.Arreglar el primero». */
+.aviso__texto span { display: block; }
+
+/* El boton del aviso es un boton, no la ultima palabra del parrafo. */
+.aviso__accion {
+  display: inline-flex;
+  align-items: center;
+  margin-top: var(--sp-2);
+  min-height: var(--toque-min);
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--radio);
+  background: var(--granate);
+  color: var(--crema);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Dentro de un bloque con margen lateral, el aviso no pone el suyo: si no, se
+   suman los dos y la caja queda mas estrecha que las tarjetas de al lado. */
+.margen > .aviso { margin-inline: 0; margin-bottom: var(--sp-3); }
+
+/* Un aviso que ademas se puede tocar para arreglar lo que avisa. Es un <button>
+   de verdad —se alcanza con el teclado y se anuncia como boton—, asi que hay
+   que devolverle lo que el navegador le quita: el ancho, la alineacion y la
+   letra. */
+.aviso--pulsable {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  align-items: flex-start;
+}
+.aviso--pulsable:hover { background: var(--aviso-linea); }
+
+.aviso--error {
+  background: var(--error-bg);
+  border-color: var(--granate);
+}
+.aviso--error .aviso__glifo,
+.aviso--error .aviso__texto b { color: var(--granate); }
+.aviso--error .aviso__texto { color: var(--granate-osc); }
+
+/* ==========================================================================
+   TARJETAS Y FILAS
+   ========================================================================== */
+
+.rotulo-seccion {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--apagado);
+  letter-spacing: var(--track-cartel);
+  margin: var(--sp-4) 0 var(--sp-2);
+  padding-inline: var(--sp-1);
+}
+
+.tarjeta {
+  background: var(--blanco);
+  border: var(--borde);
+}
+
+.tarjeta__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: var(--borde);
+}
+.tarjeta__titulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+.tarjeta__enlace {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--granate);
+  /* 44 px de area tactil. Medido: se quedaba en 31. El texto no cambia de
+     tamano; lo que crece es la caja que recibe el dedo. */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--toque-min);
+  padding: var(--sp-1) 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.filas > * { border-bottom: var(--borde); }
+.filas > *:last-child { border-bottom: none; }
+
+/* --- La linea de una reserva --------------------------------------------- */
+
+.reserva {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-3) var(--sp-4);
+  width: 100%;
+  text-align: left;
+  color: inherit;
+}
+.reserva--pulsable { cursor: pointer; }
+.reserva--pulsable:hover { background: var(--crema-2); }
+.reserva--anulada .reserva__nombre { text-decoration: line-through; }
+.reserva--anulada { opacity: .62; }
+
+.reserva__hora {
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  width: 54px;
+  flex: none;
+}
+.reserva__cuerpo { flex: 1; min-width: 0; }
+.reserva__nombre { font-size: var(--fs-lead); font-weight: 500; line-height:var(--lh-tight); }
+.reserva__mesa { font-size: var(--fs-small); color: var(--apagado); margin-top: var(--sp-1); }
+.reserva__nota {
+  font-size: var(--fs-small);
+  color: var(--granate);
+  margin-top: var(--sp-1);
+  font-weight: 500;
+}
+
+/* --- Pastillas de estado -------------------------------------------------- */
+
+.pastilla {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  padding: var(--sp-1) var(--sp-2);
+  flex: none;
+  white-space: nowrap;
+  letter-spacing: var(--track-rotulo);
+}
+.pastilla--confirmada { background: var(--ok-bg);     color: var(--ok); }
+.pastilla--pendiente  { background: var(--aviso-bg);  color: var(--aviso); }
+.pastilla--sentada    { background: var(--neutro-bg); color: var(--neutro-tinta); }
+.pastilla--no-vino    { background: var(--error-bg);  color: var(--granate); }
+.pastilla--cancelada  { background: var(--neutro-bg); color: var(--neutro-tinta); }
+
+/* --- Fichaje abierto ------------------------------------------------------ */
+
+.fichaje {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+}
+.fichaje__punto {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+}
+.fichaje__nombre { font-size: var(--fs-body); font-weight: 500; flex: 1; }
+.fichaje__hora { font-size: var(--fs-body); color: var(--apagado); font-weight: 500; text-align: right; }
+.fichaje__hora b { color: var(--tinta); display: block; font-size: var(--fs-body); font-weight: 500; }
+
+/* ==========================================================================
+   RESERVAS: TIRA DE DIAS, RESULTADOS Y BOTON FLOTANTE
+   ========================================================================== */
+
+.tira {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tira::-webkit-scrollbar { height: 0; }
+
+.tira__dia {
+  flex: none;
+  width: 54px;
+  text-align: center;
+  padding: var(--sp-2) 0 var(--sp-1);
+  background: var(--blanco);
+  border: var(--borde);
+  color: inherit;
+}
+.tira__nombre {
+  display: block;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--apagado);
+}
+.tira__numero {
+  display: block;
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  line-height:var(--lh-tight);
+}
+.tira__punto {
+  display: block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--cobre);
+  margin: var(--sp-1) auto 0;
+}
+.tira__punto--vacio { background: transparent; }
+
+.tira__dia--puesto {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+.tira__dia--puesto .tira__nombre { color: rgba(251, 243, 227, .75); }
+.tira__dia--puesto .tira__punto { background: var(--crema); }
+.tira__dia--puesto .tira__punto--vacio { background: transparent; }
+
+.dia-elegido {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  letter-spacing: var(--track-rotulo);
+  color: var(--apagado);
+  margin: var(--sp-3) 0 var(--sp-2);
+  padding-inline: var(--sp-1);
+}
+
+.resultado__dia {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  color: var(--apagado);
+  padding: var(--sp-2) var(--sp-4) 0;
+}
+
+/* El boton grande de "reserva a mano". Va flotando sobre la lista y encima de
+   la barra inferior, que es donde llega el pulgar sin cambiar de mano. */
+.flotante {
+  position: absolute;
+  right: var(--sp-4);
+  bottom: calc(var(--alto-nav) + var(--sp-4) + env(safe-area-inset-bottom));
+  background: var(--granate);
+  color: var(--crema);
+  padding: var(--sp-4) var(--sp-5);
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  box-shadow: var(--sombra-flotante);
+}
+
+/* ==========================================================================
+   ACCESO
+   ========================================================================== */
+
+.acceso {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--crema);
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+}
+
+.acceso__marca { text-align: center; margin-bottom: var(--sp-6); }
+.acceso__logo { width: 158px; height: auto; margin: 0 auto var(--sp-1); }
+.acceso__nombre {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: var(--fs-display-lg);
+  font-weight: 500;
+  line-height:var(--lh-tight);
+  color: var(--tinta);
+}
+.acceso__onda { margin: var(--sp-3) calc(var(--sp-6) + var(--sp-4)); }
+.acceso__lema {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  color: var(--apagado);
+  letter-spacing: var(--track-cartel);
+}
+
+.acceso__form { display: block; }
+
+.acceso__error {
+  background: var(--error-bg);
+  color: var(--granate-osc);
+  border: 1px solid var(--granate);
+  padding: var(--sp-3);
+  font-size: var(--fs-body);
+  margin-top: var(--sp-3);
+}
+
+.acceso__olvido {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--apagado);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3);
+  min-height: var(--toque-min);
+}
+
+.acceso__pie {
+  margin-top: auto;
+  padding-top: var(--sp-5);
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+}
+
+/* ==========================================================================
+   CAMPOS Y BOTONES
+   ========================================================================== */
+
+.campo { margin-top: var(--sp-4); }
+
+.campo__rotulo {
+  display: block;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  margin-bottom: var(--sp-2);
+}
+
+.entrada {
+  display: block;
+  width: 100%;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: 0;
+  padding: var(--sp-3);
+  font-size: var(--fs-body);
+  min-height: var(--toque-min);
+  color: var(--tinta);
+}
+.entrada--area { resize: vertical; line-height:var(--lh-body); }
+.entrada::placeholder { color: var(--apagado); }
+.entrada:focus-visible { border-color: var(--granate); }
+
+.campos-dos   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.campos-tres  { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3); }
+
+/* --- Eleccion de una opcion entre varias (zona, estado) ------------------- */
+
+.eleccion { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+.eleccion__opcion {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  letter-spacing: var(--track-rotulo);
+  padding: var(--sp-2) var(--sp-3);
+  min-height: var(--toque-min);
+  background: var(--blanco);
+  border: var(--borde-campo);
+  color: var(--apagado-2);
+}
+.eleccion__opcion--puesta {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+
+/* --- Botones -------------------------------------------------------------- */
+
+.btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: var(--sp-4);
+  min-height: var(--toque-min);
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+.btn[disabled] { opacity: .6; }
+
+.btn--primario { background: var(--granate); color: var(--crema); }
+.btn--linea {
+  background: var(--blanco);
+  border: 1.5px solid rgba(147, 32, 42, .35);
+  color: var(--granate);
+}
+.btn--peligro { background: var(--granate-osc); color: var(--crema); }
+.btn--discreto {
+  color: var(--granate);
+  font-family: var(--letra-texto);
+  font-weight: 500;
+  font-size: var(--fs-body);
+  padding: var(--sp-2);
+}
+.btn--suelto { margin-top: var(--sp-4); }
+
+/* El acceso es la unica pantalla con un boton dentro de un formulario suelto */
+.acceso__form .btn--primario { margin-top: var(--sp-4); }
+
+/* ==========================================================================
+   HOJA (el panel que sube desde abajo)
+   ========================================================================== */
+
+.velo {
+  position: fixed;
+  inset: 0;
+  background: var(--velo);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hoja {
+  width: 100%;
+  max-width: var(--ancho-max);
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--fondo-panel);
+  box-shadow: var(--sombra-hoja);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.hoja__asa {
+  width: 44px;
+  height: 4px;
+  border-radius: var(--radio-pildora);
+  background: var(--arrastre);
+  margin: var(--sp-2) auto var(--sp-1);
+  flex: none;
+}
+
+.hoja__titulo {
+  flex: none;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  border-bottom: var(--borde);
+}
+
+.hoja__cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.hoja__acciones {
+  flex: none;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  background: var(--blanco);
+  border-top: var(--borde);
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.hoja__error {
+  background: var(--error-bg);
+  color: var(--granate-osc);
+  border: 1px solid var(--granate);
+  padding: var(--sp-3);
+  font-size: var(--fs-body);
+  margin-top: var(--sp-3);
+}
+
+/* Con la hoja abierta, el fondo no se desplaza por debajo. */
+body.sin-scroll { overflow: hidden; }
+
+/* --- Ficha de una reserva -------------------------------------------------- */
+
+.ficha__cuando {
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-display);
+  font-weight: 500;
+  color: var(--granate-osc);
+  margin-bottom: var(--sp-3);
+}
+
+.ficha__datos {
+  background: var(--blanco);
+  border: var(--borde);
+}
+.ficha__dato {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: var(--borde);
+  font-size: var(--fs-body);
+}
+.ficha__dato:last-child { border-bottom: none; }
+.ficha__dato dt {
+  font-family: var(--letra-rotulo);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  color: var(--apagado);
+  flex: none;
+}
+.ficha__dato dd { text-align: right; font-weight: 500; }
+.ficha__telefono { color: var(--granate); font-weight: 500; }
+
+.ficha__rotulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.formulario__aviso {
+  background: var(--aviso-bg);
+  border: 1px solid var(--aviso-linea);
+  color: var(--aviso-texto);
+  font-size: var(--fs-small);
+  padding: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+/* --- Interruptor ----------------------------------------------------------- */
+
+.interruptor {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--blanco);
+  border: var(--borde);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+}
+.interruptor__cuerpo { flex: 1; min-width: 0; }
+.interruptor__nombre { display: block; font-size: var(--fs-body); font-weight: 500; }
+.interruptor__pie { display: block; font-size: var(--fs-small); color: var(--apagado); margin-top: var(--sp-1); }
+
+/* La casilla de verdad sigue ahi, invisible pero presente: es la que responde
+   al teclado y la que anuncia el lector de pantalla. Lo que se ve es .palanca. */
+.interruptor__casilla {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+}
+.interruptor__palanca {
+  /* Ancho fijo y sin encoger: la palanca no depende de lo que midan las columnas
+     de al lado, ni de que la variable llegue. */
+  width: var(--ancho-palanca, 46px); height: 27px;
+  border-radius: var(--radio-pildora);
+  background: var(--interruptor);
+  position: relative;
+  flex: none;
+  transition: background var(--transicion);
+}
+.interruptor__palanca::after {
+  content: "";
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  background: var(--blanco);
+  box-shadow: 0 1px 3px rgba(40, 15, 18, .25);
+  transition: left var(--transicion);
+}
+.interruptor__casilla:checked ~ .interruptor__palanca { background: var(--ok); }
+.interruptor__casilla:checked ~ .interruptor__palanca::after { left: 22px; }
+.interruptor__casilla:focus-visible ~ .interruptor__palanca {
+  outline: 2.5px solid var(--granate);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   CARTA
+   ========================================================================== */
+
+/* Cada categoria es una tarjeta suelta, con aire entre ellas. */
+.tarjeta--suelta + .tarjeta--suelta { margin-top: var(--sp-3); }
+
+/* Cabecera de grupo: la banda granate de la maqueta, y ademas el tirador que
+   pliega la categoria. La banda entera es el area de toque —no solo la flecha—
+   porque con quince categorias se pliega y se despliega con el pulgar, de pie
+   detras de la barra. */
+.grupo-titulo {
+  /* El <h2> solo esta para que el indice de encabezados siga existiendo; toda
+     la pinta la lleva el boton de dentro. */
+  display: block;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.grupo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-4);
+  min-height: var(--toque-min);
+  text-align: left;
+  background: var(--granate);
+  color: var(--crema);
+}
+/* El foco de base es granate y sobre la banda granate no se veria. */
+.grupo:focus-visible { outline-color: var(--crema); outline-offset: -3px; }
+
+/* La flecha no cambia de sitio al plegar: siempre delante del nombre, para que
+   el ojo la encuentre en la misma columna en las quince categorias. */
+.grupo__glifo {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  opacity: .9;
+  /* El giro del chevron acompaña al despliegue, que es lo unico que responde a
+     un toque en esta fila. */
+  transition: transform var(--transicion);
+}
+.grupo__nombre {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+.grupo__cuenta { flex: none; font-size: var(--fs-small); opacity: .82; font-weight: 500; }
+
+/* Los rotulos "Barra" y "Terraza" sobre las dos columnas de precio. */
+.columnas-precio {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) 0;
+  background: var(--blanco);
+}
+/* La rejilla del listado es apretada a proposito: en 390 px, los dos precios y
+   el interruptor se comen el ancho y al nombre del plato —que es lo que se
+   lee— no le queda sitio. Cada pixel de aqui es una linea menos de nombre
+   partido en tres. */
+/* Cuando la fila lleva interruptor, los rotulos tienen que apartarse su ancho:
+   si no, «Barra» cae encima de la columna de terraza y «Terraza / Salón» encima
+   de la palanca. Estaba descuadrado desde siempre y con el rotulo largo se ve.
+   La cuenta es la del interruptor mas el hueco que lo separa de los precios. */
+.columnas-precio--con-interruptor {
+  padding-right: calc(var(--sp-4) + var(--ancho-palanca, 46px) + var(--sp-2));
+}
+
+/* «Terraza / Salón» ocupa dos lineas. No se ensancha la columna: el ancho de
+   46 px es el que deja sitio al nombre del plato en 390 px. */
+.columnas-precio span {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  line-height:var(--lh-tight);
+  font-weight: 500;
+  color: var(--apagado);
+  width: 46px;
+  text-align: right;
+  letter-spacing: var(--track-cartel);
+}
+
+/* --- La linea de un plato ------------------------------------------------- */
+
+.fila-plato {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--blanco);
+}
+/* Un plato apagado se ve, pero se ve apagado: sigue estando en la carta y hay
+   que poder encontrarlo para volver a encenderlo. */
+.fila-plato--apagada .fila-plato__abrir { opacity: .55; }
+
+.fila-plato__abrir {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: left;
+  color: inherit;
+  padding: var(--sp-2) 0;
+  min-height: var(--toque-min);
+}
+.fila-plato__cuerpo { flex: 1; min-width: 0; }
+.fila-plato__nombre { display: block; font-size: var(--fs-body); font-weight: 500; }
+.fila-plato__pie {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+.fila-plato__precios {
+  display: flex;
+  gap: var(--sp-3);
+  flex: none;
+  text-align: right;
+}
+.fila-plato__precios span {
+  width: 46px;
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+.fila-plato__terraza { color: var(--granate); }
+
+/* --- Asidero de reordenar -------------------------------------------------- */
+
+.asidero {
+  flex: none;
+  color: var(--arrastre);
+  font-size: var(--fs-body);
+  line-height: 1;
+  /* La pastilla se ve de 9 px de ancho, pero el dedo necesita 44: el padding
+     lateral ensancha el area sin engordar el dibujo. Medido: era 9x44. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--toque-min);
+  min-height: var(--toque-min);
+  padding: var(--sp-2) var(--sp-3);
+  /* Sin esto, arrastrar el asidero desplaza la pagina en vez de mover la fila. */
+  touch-action: none;
+  cursor: grab;
+}
+.asidero:active { cursor: grabbing; }
+
+.filas--reordenando { user-select: none; }
+.fila-plato--moviendo {
+  background: var(--crema-2);
+  box-shadow: 0 4px 14px rgba(40, 15, 18, .16);
+  position: relative;
+  z-index: 1;
+}
+
+/* El interruptor suelto de la linea: sin rotulo a la vista, solo la palanca. */
+.interruptor--suelto {
+  background: none;
+  border: none;
+  padding: var(--sp-2) 0;
+  /* `flex: none` es `0 0 auto`, o sea que ya no crece ni encoge. Se deja escrito
+     aparte el ancho minimo porque es lo que de verdad importa aqui: pase lo que
+     pase con el nombre del plato o con los rotulos de precio, la columna del
+     interruptor mide lo que mide y no se la lleva nadie fuera de la pantalla. */
+  flex: none;
+  flex-shrink: 0;
+  min-width: var(--ancho-palanca, 46px);
+  gap: 0;
+}
+
+/* ==========================================================================
+   EDITAR PLATO
+   ========================================================================== */
+
+.formulario { padding-bottom: var(--sp-4); }
+
+/* Barra de acciones pegada abajo, sobre el borde de la pantalla. Es la de la
+   maqueta: el boton de guardar no se busca, esta siempre donde el pulgar. */
+.acciones {
+  flex: none;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  padding-bottom: calc(var(--sp-4) + env(safe-area-inset-bottom));
+  background: var(--blanco);
+  border-top: var(--borde);
+  display: grid;
+  gap: var(--sp-2);
+}
+
+/* --- Foto ------------------------------------------------------------------ */
+
+.foto__hueco {
+  width: 100%;
+  height: 118px;
+  border: 1.5px dashed var(--arrastre);
+  background: var(--blanco);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  color: var(--apagado);
+  font-size: var(--fs-body);
+}
+.foto__glifo { width: 26px; height: 26px; color: var(--granate); }
+
+.foto__vista {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border: var(--borde);
+  background: var(--blanco);
+}
+.foto__botones { display: grid; gap: var(--sp-2); margin-top: var(--sp-2); }
+
+/* Un campo desactivado tiene que PARECER desactivado, o se teclea encima y no
+   se entiende por que no cambia nada. */
+.entrada:disabled {
+  background: var(--neutro-bg);
+  color: var(--apagado);
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   MAS
+   ========================================================================== */
+
+.cuenta {
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.cuenta__cuerpo { flex: 1; min-width: 0; }
+
+/* Salir. El icono se ve de 20 px y el area tactil mide 44: se agranda el area,
+   no el dibujo. Va pegado a contenido, asi que pregunta antes de cerrar. */
+.cuenta__salir {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--toque-min);
+  height: var(--toque-min);
+  /* El icono tira hacia el borde de la tarjeta para no dejar un hueco raro;
+     el area tactil se sale del padding y sigue midiendo 44. */
+  margin-right: calc(-1 * var(--sp-2));
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--apagado);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .cuenta__salir:hover { color: var(--granate); }
+}
+
+/* --- Iconos ----------------------------------------------------------------
+   Una sola clase gobierna el tamano de todos: 20 px por defecto, 24 en la barra
+   inferior. El color lo heredan del texto (currentColor), asi que el mismo
+   dibujo sirve en granate sobre crema y en crema sobre granate.
+   Los dibujos estan en compartido/js/iconos.js. */
+.ic {
+  width: 20px;
+  height: 20px;
+  /* inline-block y no block: dentro de un flex da igual —se convierte en
+     block—, pero al lado de un texto corrido el block lo tiraba a la linea de
+     abajo. Paso con la flecha de «Ver lo que se cuece» de la portada. */
+  display: inline-block;
+  vertical-align: middle;
+  flex: none;
+}
+.ic--nav { width: 24px; height: 24px; }
+
+/* El chevron es UN dibujo y cuatro direcciones. Girarlo es mas barato —y mas
+   coherente— que dibujar cuatro flechas que luego no casan entre si. */
+.ic--atras  { transform: rotate(180deg); }
+.ic--abajo  { transform: rotate(90deg); }
+.ic--arriba { transform: rotate(-90deg); }
+.cuenta__nombre { font-size: var(--fs-lead); font-weight: 500; }
+.cuenta__rol {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  letter-spacing: var(--track-rotulo);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+/* --- Horario del bar (una fila por dia de la semana) ----------------------- */
+.dia-horario {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: var(--borde);
+}
+.dia-horario:last-child { border-bottom: none; }
+.dia-horario .interruptor { flex: 1; min-width: 0; }
+.dia-horario__horas {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: none;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+}
+/* Los dos campos de hora se estrechan para que quepan los dos y la palabra
+   «a» en 320 px. El alto sigue siendo el tactil. */
+.dia-horario__horas .entrada { width: 92px; padding-inline: var(--sp-2); }
+.dia-horario__cerrado { flex: none; font-size: var(--fs-small); color: var(--tenue); }
+
+.futuro { padding: var(--sp-3) var(--sp-4); }
+.futuro__texto { font-size: var(--fs-body); line-height: var(--lh-tight); color: var(--apagado-2); }
+
+.pie-nota {
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-5);
+}
+
+/* ==========================================================================
+   ALMACEN
+   ==========================================================================
+   La maqueta no dibuja el almacen (design/rincon-panel.html tiene ocho
+   pantallas y ninguna es esta), asi que aqui no se ha inventado una estetica:
+   todo sale de piezas que ya existen —tarjeta, filas, grupo, pastilla— con los
+   mismos tokens y las mismas medidas. Lo unico nuevo son cuatro variantes de
+   fila, y estan calcadas de .fila-plato. Ver DECISIONES.md, D-46.
+   ========================================================================== */
+
+/* Dos tarjetas seguidas necesitan aire. Hasta ahora nunca pasaba: entre dos
+   tarjetas siempre habia un rotulo de seccion, que ya trae su margen. En «Hoy»,
+   las faltas van justo detras de las proximas reservas y sin rotulo —la tarjeta
+   ya lleva su propio titulo dentro—, y sin esto las dos se pegan y parecen una
+   sola lista. */
+.tarjeta + .tarjeta { margin-top: var(--sp-4); }
+
+/* Cuenta de faltas en la cabecera de la tarjeta. No es una pastilla de estado:
+   es un numero, y por eso no lleva color de estado. */
+.tarjeta__cuenta {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--granate);
+  letter-spacing: var(--track-rotulo);
+}
+
+/* Pie de tarjeta: el boton de "Apuntar una falta" pegado debajo de la lista. */
+.tarjeta__pie {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: var(--borde);
+}
+
+/* --- Una falta apuntada --------------------------------------------------- */
+
+.falta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+}
+.falta__cuerpo { flex: 1; min-width: 0; }
+.falta__nombre { font-size: var(--fs-body); font-weight: 500; line-height:var(--lh-tight); }
+.falta__pie {
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+/* El ✓ de "ya esta repuesto". Cuadrado, del tamano tactil minimo y con borde:
+   se pulsa con el pulgar y con las manos ocupadas. */
+.falta__hecho {
+  flex: none;
+  width: var(--toque-min);
+  border: var(--borde-campo);
+  color: var(--ok);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  line-height: 1;
+  background: var(--blanco);
+}
+.falta__hecho:hover { background: var(--ok-bg); }
+.falta__hecho[disabled] { opacity: .5; }
+
+/* --- La linea de un producto ---------------------------------------------- */
+/* Calcada de .fila-plato, sin las dos columnas de precio: en el almacen no hay
+   precios (seccion 2 del encargo). */
+
+.fila-prod {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--blanco);
+}
+/* Un producto apartado se ve, pero se ve apagado: sigue en la base y hay que
+   poder encontrarlo para volver a ponerlo en uso. */
+.fila-prod--apagada .fila-prod__abrir { opacity: .55; }
+
+.fila-prod__abrir {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: left;
+  color: inherit;
+  padding: var(--sp-2) 0;
+  min-height: var(--toque-min);
+}
+/* A cocina y a empleado la fila no se les abre: la regla de la coleccion no les
+   deja actualizar. Misma linea, sin cursor de mano ni foco. */
+.fila-prod__abrir--quieta { cursor: default; }
+
+.fila-prod__cuerpo { flex: 1; min-width: 0; }
+.fila-prod__nombre { display: block; font-size: var(--fs-body); font-weight: 500; }
+.fila-prod__pie {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+/* "Sin configurar: falta la unidad y el proveedor". Va en el marron de aviso,
+   no en gris: es una tarea pendiente, no un dato. */
+.fila-prod__pendiente {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--aviso);
+  font-weight: 500;
+  margin-top: var(--sp-1);
+}
+
+/* Nota bajo la cabecera de un grupo ("no se piden ni salen en el recuento"). */
+.grupo__nota {
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  padding: var(--sp-2) var(--sp-4) 0;
+  background: var(--blanco);
+}
+
+/* --- Fila que lleva a otra pantalla --------------------------------------- */
+
+.fila-ir {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  min-height: var(--toque-min);
+  color: inherit;
+}
+.fila-ir:hover { background: var(--crema-2); }
+.fila-ir__cuerpo { flex: 1; min-width: 0; }
+.fila-ir__nombre { display: block; font-size: var(--fs-body); font-weight: 500; }
+.fila-ir__pie {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+.fila-ir__flecha {
+  flex: none;
+  color: var(--arrastre);
+  font-size: var(--fs-title);
+  line-height: 1;
+}
+
+/* --- Apuntar una falta: la lista de tocar --------------------------------- */
+/* Botones grandes y de una sola cosa. Se usan de pie, con prisa y a veces con
+   las manos mojadas: aqui el area tactil es todo lo ancho de la tarjeta. */
+
+.toca-prod {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  color: inherit;
+  background: var(--blanco);
+}
+.toca-prod:hover { background: var(--crema-2); }
+.toca-prod__cuerpo { flex: 1; min-width: 0; }
+.toca-prod__nombre { display: block; font-size: var(--fs-lead); font-weight: 500; }
+.toca-prod__pie {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+/* Confirmacion de "apuntado". No es un aviso ni un error: es un acuse de
+   recibo, y por eso va en verde y sin caja. */
+.apuntado {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--ok);
+  margin-top: var(--sp-3);
+}
+
+/* Alta al vuelo, al final de la lista de buscar. */
+.alta-vuelo {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4);
+  background: var(--blanco);
+  border: var(--borde);
+}
+.alta-vuelo .btn { margin-top: var(--sp-2); }
+.alta-vuelo .parrafo:last-child { margin-top: var(--sp-2); }
+
+/* ==========================================================================
+   RECUENTO Y LISTA DE PEDIDO
+   ==========================================================================
+   Mismo criterio que el resto del almacen (D-47): la maqueta no dibuja estas
+   pantallas, asi que todo sale de piezas que ya existen. Lo unico nuevo es la
+   banda de progreso, que no tiene equivalente en ninguna otra pantalla.
+   ========================================================================== */
+
+/* La banda va PEGADA ARRIBA mientras se recorre el almacen: cuanto llevas
+   contado y cuanto queda por mandar son las dos cosas que se miran de reojo
+   entre estanteria y estanteria, y perderlas al hacer scroll obliga a subir. */
+.recuento-banda {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--blanco);
+  border-bottom: var(--borde);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.recuento-banda__cifras {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.recuento-banda__cuenta {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+/* Lo pendiente de mandar NO va en rojo: en el sotano no hay cobertura y eso es
+   lo normal, no un error. Alarmar aqui hace que alguien suba a la barra a media
+   cuenta a mirar si "se ha roto algo". */
+.recuento-banda__cola { font-size: var(--fs-small); color: var(--aviso); font-weight: 500; }
+.recuento-banda__ok   { font-size: var(--fs-small); color: var(--ok); font-weight: 500; }
+
+.progreso {
+  height: 6px;
+  background: var(--neutro-bg);
+  overflow: hidden;
+}
+.progreso__barra {
+  height: 100%;
+  background: var(--ok);
+  transition: width var(--transicion);
+}
+
+/* --- Una linea que se cuenta ---------------------------------------------- */
+
+.fila-cuenta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--blanco);
+}
+/* Lo ya contado se marca con una linea verde a la izquierda, no con un cambio
+   de fondo: hay que poder recorrer la lista de un vistazo y ver los huecos. */
+.fila-cuenta--contada { box-shadow: inset 3px 0 0 var(--ok); }
+
+.fila-cuenta__cuerpo {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-2) 0;
+  cursor: pointer;
+}
+.fila-cuenta__nombre { display: block; font-size: var(--fs-body); font-weight: 500; }
+.fila-cuenta__pie {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+/* El campo de cantidad: ancho fijo, numero grande y alineado a la derecha, que
+   es como se leen las cantidades una debajo de otra. */
+.entrada--cuenta {
+  width: 84px;
+  flex: none;
+  text-align: right;
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  padding-inline: var(--sp-2);
+}
+
+/* --- Lista de pedido ------------------------------------------------------ */
+
+.pedido-cabeza { margin-bottom: var(--sp-4); }
+.pedido-cabeza__titulo {
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  color: var(--granate);
+}
+.pedido-cabeza__pie { font-size: var(--fs-body); color: var(--apagado); margin-top: var(--sp-1); }
+.pedido-cabeza__nota {
+  font-size: var(--fs-small);
+  color: var(--apagado-2);
+  margin-top: var(--sp-2);
+  font-style: italic;
+}
+
+/* El telefono del proveedor, justo debajo de su nombre: la lista se usa
+   llamando. */
+.grupo__telefono {
+  display: block;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--blanco);
+  border-bottom: var(--borde);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--granate);
+  min-height: var(--toque-min);
+  line-height: calc(var(--toque-min) - 2 * var(--sp-2));
+}
+
+.fila-pedido {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--blanco);
+}
+/* Lo que no entra en el pedido se ve, pero apagado: esta ahi para poder
+   anadirlo a mano, no para leerlo. */
+.fila-pedido--fuera .fila-pedido__cuerpo { opacity: .55; }
+
+.fila-pedido__cuerpo { flex: 1; min-width: 0; }
+.fila-pedido__nombre { display: block; font-size: var(--fs-body); font-weight: 500; }
+.fila-pedido__pie {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  margin-top: var(--sp-1);
+}
+
+/* ==========================================================================
+   PERSONAL: CUADRANTE, FICHAJES Y EQUIPO
+   ==========================================================================
+   El cuadrante SI esta dibujado en la maqueta (pantalla 6) y esto lo sigue al
+   pie: el dia como bloque, las iniciales en un circulo de color, la hora a la
+   derecha y el hueco sin cubrir en granate. Los fichajes (pantalla 7) reusan
+   .fichaje, que ya existia desde «Hoy».
+
+   La pantalla del equipo no esta dibujada, asi que ahi no se ha inventado nada:
+   es .fila-prod del almacen con el circulo delante (D-47).
+   ========================================================================== */
+
+/* --- El circulo de las iniciales ------------------------------------------- */
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--granate);
+  color: var(--crema);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  flex: none;
+}
+
+/* --- El cuadrante ---------------------------------------------------------- */
+
+.semana {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.semana__titulo { flex: 1; min-width: 0; }
+.semana__hoy { flex: none; }
+
+/* El dia de hoy lleva un filo granate a la izquierda. Es lo unico anadido a la
+   maqueta en esta pantalla: sin marca, quien abre el cuadrante el jueves tiene
+   que contar los dias desde arriba. */
+.tarjeta--hoy { box-shadow: inset 3px 0 0 var(--granate); }
+
+/* Leyenda del cuadrante. Tres muestras y se acabo: si hiciera falta explicar
+   mas, la barra no estaria haciendo su trabajo. */
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-tight);
+  color: var(--apagado);
+}
+.leyenda__item { display: flex; align-items: center; gap: var(--sp-1); }
+.leyenda__muestra {
+  width: 18px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--radio-pildora);
+  background: var(--granate);
+}
+.leyenda__muestra--hueco { background: transparent; border: 1px solid var(--granate); opacity: .55; }
+.leyenda__muestra--franja { width: 1px; height: 12px; border-radius: 0; background: var(--linea); }
+
+/* --- Cabecera de un dia ---------------------------------------------------
+   La usan fichajes y cuadrante, que ensenan lo mismo: que dia es, cuanto suma y
+   que hay que mirar. Va FUERA de la tarjeta, como en la maqueta. */
+.dia-barras { margin-bottom: var(--sp-5); }
+/* Si el dia es lo primero de la pantalla —sin aviso ni boton de fichar
+   delante— su cabecera se quedaba pegada al borde de la barra granate. */
+.margen > .dia-barras:first-child { margin-top: var(--sp-4); }
+
+.dia-cab {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.dia-cab__dia {
+  margin: 0;
+  font-family: var(--letra-rotulo);
+  font-weight: 500;
+  font-size: var(--fs-lead);
+  letter-spacing: var(--track-rotulo);
+}
+.dia-cab__resumen { font-size: var(--fs-small); color: var(--apagado); }
+
+/* La linea de debajo. En granate solo cuando hay algo que arreglar; el resto
+   del tiempo dice que esta todo bien, en gris y sin levantar la voz. */
+.dia-nota {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-tight);
+  color: var(--granate);
+}
+.dia-nota--ok { color: var(--tenue); }
+
+/* --- Barra de un dia -------------------------------------------------------
+   La pieza de panel/js/piezas/barra-dia.js, compartida por fichajes y
+   cuadrante. Ver alli por que es una sola.
+
+   LA COLUMNA DEL NOMBRE NO CRECE. 56 px fijos y elipsis: si el nombre empuja,
+   el eje deja de empezar a la misma altura en todas las filas y el componente
+   pierde entero su motivo de ser, que es comparar filas de un vistazo. */
+.barra-dia { padding: var(--sp-3) var(--sp-3) var(--sp-2); }
+
+/* Una regleta por dia, arriba del grupo. Repetirla en cada fila convierte la
+   tarjeta en una hoja de calculo y el ojo deja de ver las barras. */
+.barra-dia__regleta { display: flex; margin-bottom: var(--sp-2); }
+.barra-dia__hueco-nombre { width: 56px; flex: none; }
+.barra-dia__marcas {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-tight);
+  color: var(--tenue);
+}
+
+.barra-fila {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  /* Ancla del area tactil de «corregir» / «asignar». Ver mas abajo. */
+  position: relative;
+}
+/* La fila que se puede tocar mide 44 px de alto aunque su dibujo mida 29: es
+   el minimo tactil y aqui se gana con altura de fila, no agrandando el texto.
+   Solo la afectan las filas con accion, asi que el cuadrante y los fichajes
+   cerrados conservan la densidad de la maqueta. */
+.barra-fila--con-accion { min-height: var(--toque-min); }
+.barra-fila:last-child { margin-bottom: 0; }
+
+.barra-fila__nombre {
+  display: block;
+  width: 56px;
+  flex: none;
+  font-size: var(--fs-small);
+  line-height: var(--lh-tight);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Un pixel de ajuste optico para que la primera linea del nombre quede a la
+     altura de la barra. No es espaciado: no se redondea a la escala. */
+  padding-top: 1px;
+}
+.barra-fila__cuerpo { flex: 1; min-width: 0; display: block; }
+
+/* La fila entera lleva a corregir el fichaje o a abrir el turno. Es un <button>
+   de verdad, asi que hay que devolverle lo que el navegador le quita: el ancho,
+   la alineacion, la letra y el color. */
+.barra-fila--pulsable {
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* Ya mide 44 px aunque su dibujo mida 29. */
+  min-height: var(--toque-min);
+}
+/* EL HOVER, SOLO CON RATON. En iOS el :hover se queda pegado despues de tocar,
+   hasta que se toca en otro sitio. Y en esta pantalla el granate en un nombre
+   significa «sin cerrar»: una fila que se queda granate porque la has tocado
+   dice que hay un problema donde no lo hay. Con raton no pasa y ayuda a ver
+   que la fila lleva a algun sitio. */
+@media (hover: hover) {
+  .barra-fila--pulsable:hover .barra-fila__nombre { color: var(--granate); }
+}
+
+/* La pista de fondo ocupa el 100% del ancho disponible y es SIEMPRE la misma
+   ventana en todas las filas: de ahi que se puedan comparar. */
+.barra-fila__eje {
+  display: block;
+  position: relative;
+  height: 10px;
+  background: var(--neutro-bg);
+  border-radius: var(--radio-pildora);
+}
+
+/* Linea de cambio de franja (el final del turno de manana). Sobresale tres
+   pixeles por arriba y por abajo para que se vea sobre la pista. */
+.barra-fila__franja {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--linea);
+}
+
+.barra-fila__tramo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Un tramo de diez minutos no puede desaparecer: por debajo de esto no baja. */
+  min-width: 4px;
+  background: var(--granate);
+  border-radius: var(--radio-pildora);
+}
+
+/* Lo que se sale de la ventana pierde la esquina de ese lado. Es como se lee
+   "esto sigue mas alla del borde" sin escribirlo. */
+.barra-fila__tramo--corta-derecha {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.barra-fila__tramo--corta-izquierda {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Sin cerrar: rayado y hasta el final del eje. Visualmente, esto no termina. */
+.barra-fila__tramo--abierto {
+  background: var(--error-bg);
+  border: 1px dashed var(--granate);
+}
+
+/* Hueco sin cubrir (solo cuadrante): el hueco se dibuja, no se rellena. */
+.barra-fila__tramo--hueco {
+  background: transparent;
+  border: 1px solid var(--granate);
+  opacity: .55;
+}
+
+/* El pie es LA FUENTE DE VERDAD, no la barra: el dato que se consulta es el
+   rango horario, asi que va primero y la duracion queda a la derecha. */
+.barra-fila__pie {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-tight);
+  color: var(--apagado);
+}
+.barra-fila__horas { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barra-fila__total { flex: none; }
+.barra-fila__dia-mas { color: var(--tenue); }
+
+/* Sin cerrar: nombre y textos en granate, que es lo que hay que arreglar. */
+.barra-fila--abierta .barra-fila__nombre,
+.barra-fila--abierta .barra-fila__pie { color: var(--granate); }
+
+/* La fila de huecos del cuadrante no es de nadie: se dice en gris. */
+.barra-fila--vacia .barra-fila__nombre,
+.barra-fila--vacia .barra-fila__pie { color: var(--tenue); }
+
+/* «corregir» / «asignar»: donde iria la duracion. Es un boton de verdad, asi
+   que hay que devolverle lo que el navegador le quita.
+
+   El area tactil se agranda con un ::after invisible de 44 px de alto y no con
+   padding: la fila mide 10 px de barra y 12 px de pie, y estirarla de verdad
+   descuadraria el eje de todas las demas. Se agranda el area, no el dibujo. */
+.barra-fila__accion {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--granate);
+  text-decoration: underline;
+  cursor: pointer;
+}
+/* El area se estira hasta los bordes DE LA FILA, no centrada en el enlace: con
+   dos filas sin cerrar seguidas, dos areas de 44 px centradas en su texto se
+   pisarian y tocar una abriria la otra. Anclada a la fila no hay solape
+   posible, y la fila ya mide 44 px por la regla de arriba. */
+.barra-fila__accion::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 88px;
+}
+
+.dia-blq {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: var(--borde);
+}
+.dia-blq:last-child { border-bottom: none; }
+
+/* El dia de hoy lleva un filo granate a la izquierda. Es lo unico que se ha
+   anadido a la maqueta en esta pantalla: sin marca, quien abre el cuadrante el
+   jueves tiene que contar los dias desde arriba. */
+.dia-blq--hoy { box-shadow: inset 3px 0 0 var(--granate); }
+
+.dia-blq__cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.dia-blq__dia {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+.dia-blq__horas { font-size: var(--fs-small); color: var(--apagado); font-weight: 500; }
+
+/* El hueco sin cubrir: es lo unico granate de la pantalla, y es lo unico que
+   hay que hacer al mirarla. */
+.dia-blq__hueco {
+  font-size: var(--fs-body);
+  color: var(--granate);
+  font-weight: 500;
+  padding: var(--sp-2) 0;
+}
+
+.dia-blq__anadir {
+  display: block;
+  width: 100%;
+  text-align: left;
+  /* 44 px de area tactil. Medido: se quedaba en 39 y es un boton que se usa a
+     diario y de pie. Crece el area, no la letra. */
+  min-height: var(--toque-min);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--apagado);
+  background: none;
+}
+.dia-blq__anadir:hover { color: var(--granate); }
+
+.turno {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  width: 100%;
+  background: none;
+  text-align: left;
+}
+.turno--pulsable { cursor: pointer; }
+.turno--pulsable:hover .turno__nombre { color: var(--granate); }
+
+.turno__nombre { font-size: var(--fs-body); font-weight: 500; flex: 1; min-width: 0; }
+.turno__rango { font-size: var(--fs-body); color: var(--apagado); font-weight: 500; }
+
+.botonera { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); }
+
+/* --- Fichajes -------------------------------------------------------------- */
+
+/* .fichaje ya existia en «Hoy»; aqui se le anaden las tres variantes que pide
+   la pantalla de control horario. */
+.fichaje--pulsable {
+  width: 100%;
+  background: var(--blanco);
+  text-align: left;
+  cursor: pointer;
+}
+.fichaje--pulsable:hover { background: var(--crema-2); }
+
+/* Quien se dejo el turno abierto un dia que ya paso. Es el error del que habla
+   la pantalla, y por eso es lo unico que se pinta en granate. */
+.fichaje__nombre--roto { color: var(--granate); }
+
+/* La marca de "esto se toco a mano". Discreta a proposito: informa, no acusa. */
+.fichaje__marca {
+  flex: none;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-small);
+  color: var(--apagado);
+}
+
+/* «Corregido a mano», junto al nombre de la fila. Pequeno y apagado: informa,
+   no acusa. Va con <title>, asi que se anuncia al lector de pantalla. */
+.barra-fila__marca {
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-left: var(--sp-1);
+  color: var(--tenue);
+}
+
+/* El boton de fichar, en el pie de la tarjeta de «En turno ahora». */
+.fichar { display: grid; gap: var(--sp-2); justify-items: start; }
+.btn--fila { width: 100%; }
+
+/* El selector de mes del informe. */
+.mes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.mes__nombre {
+  flex: 1;
+  text-align: center;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+.mes__ir { border-radius: 50%; }
+.mes__ir[disabled] { opacity: .35; }
+
+/* --- El equipo ------------------------------------------------------------- */
+
+/* La ficha lleva el circulo delante del nombre, y por eso la fila del equipo es
+   .fila-prod con hueco para el avatar. */
+.fila-prod .avatar { margin-right: var(--sp-3); }
+
+/* Los colores del cuadrante se eligen tocando el color, no leyendo su nombre:
+   el nombre esta en el aria-label para quien no lo ve. */
+.color {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 2px var(--blanco);
+  cursor: pointer;
+}
+.color--puesto { border-color: var(--tinta); }
+.color:focus-visible { outline: 2px solid var(--granate); outline-offset: 2px; }
+
+/* --- Fichas del equipo y cuentas de acceso --------------------------------- */
+
+/* Las horas contratadas, a la derecha de la fila del equipo. Discretas: son un
+   dato del contrato, no un marcador. */
+.fila-horas {
+  flex: none;
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  font-weight: 500;
+}
+
+/* El nombre de usuario, a la derecha de la fila de cuentas: es la llave, y es
+   lo que se dicta por teléfono. */
+.fila-usuario {
+  flex: none;
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-body);
+  color: var(--granate);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+}
+
+/* «tú» al lado del nombre en la lista de cuentas: sin esto, el dueño no sabe
+   cuál de las cuentas es la suya y acaba cambiándose el rol sin querer. */
+.marca-tu {
+  margin-left: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: 999px;
+  background: var(--neutro-bg);
+  color: var(--neutro-tinta);
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: var(--track-rotulo);
+  vertical-align: 1px;
+}
+
+/* Lo que ya se sabe de esa persona, escrito arriba de la ficha. */
+.resumen-ficha {
+  background: var(--crema-2);
+  border: var(--borde);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-2);
+}
+.resumen-ficha__linea {
+  font-size: var(--fs-body);
+  color: var(--apagado-2);
+  line-height:var(--lh-body);
+}
+.resumen-ficha__linea + .resumen-ficha__linea { margin-top: var(--sp-1); }
+
+/* Un plato al que le falta el precio: no sale en la carta pública aunque esté
+   encendido. Se marca en el marrón de aviso, el mismo que los productos «sin
+   configurar» del almacén, porque es lo mismo: algo a medias que hay que
+   terminar (DECISIONES.md, D-76). */
+.fila-plato__pie--falta { color: var(--aviso); font-weight: 500; }
+
+/* ==========================================================================
+   ESTADÍSTICAS
+   ==========================================================================
+   Pantalla 8 de la maqueta. Las tres casillas de arriba son las mismas de
+   «Hoy» (.casillas), así que aquí solo está lo que no existía: el gráfico de
+   barras y las listas con posición. */
+
+.grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  height: 150px;
+  padding: var(--sp-4) var(--sp-4) 0;
+}
+.grafico__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 100%;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.grafico__barra {
+  width: 100%;
+  background: var(--barra-suave, #C77179);
+  /* El alto lo pone el JavaScript en porcentaje. Sin altura mínima, un día a
+     cero no dibuja nada, que es justo lo que tiene que pasar. */
+}
+.grafico__barra--alta { background: var(--granate); }
+.grafico__pie {
+  font-family: var(--letra-rotulo);
+  font-size: var(--fs-caption);
+  color: var(--apagado);
+  font-weight: 500;
+  line-height: 1;
+  /* Con un mes de barras, las etiquetas que no tocan van vacías: se reserva su
+     hueco igualmente para que las barras no bailen de alto. */
+  min-height: 12px;
+}
+.grafico__leyenda {
+  padding: var(--sp-3) var(--sp-4) var(--sp-3);
+  font-size: var(--fs-small);
+  color: var(--apagado);
+  border-top: var(--borde);
+  margin-top: var(--sp-3);
+  line-height:var(--lh-body);
+}
+
+/* Lista con posición: platos más mirados y búsquedas sin resultado. La misma
+   fila para las dos; en las búsquedas no hay número y el nombre empieza pegado
+   al borde, que es lo que hace la maqueta. */
+.puesto {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+}
+.puesto__numero {
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-title);
+  color: var(--puesto-numero, #C6B49B);
+  width: 20px;
+  flex: none;
+  font-weight: 500;
+  text-align: center;
+}
+.puesto__nombre {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+.puesto__valor {
+  font-size: var(--fs-body);
+  color: var(--apagado);
+  font-weight: 500;
+  flex: none;
+}
+
+/* ==========================================================================
+   EVENTOS
+   ==========================================================================
+   La lista reutiliza .fila-prod del almacén (D-47). Lo único propio es el
+   hueco de la imagen, cuando el evento la tiene. */
+
+.fila-ev__foto {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: var(--radio);
+  border: 1px solid var(--linea);
+  background: var(--neutro-bg);
+}
+.fila-ev__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Banda de «sin conexión». Va pegada encima de la barra inferior, en el marrón
+   de aviso del resto del panel, y no tapa nada: la barra inferior mide 64 px y
+   esto se queda justo por encima. Aparece y desaparece sola (js/pwa.js). */
+.sin-red {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--alto-nav);
+  z-index: 40;
+  background: var(--aviso-bg);
+  border-top: 1px solid var(--aviso-linea);
+  color: var(--aviso-texto);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  text-align: center;
+  padding: var(--sp-2) var(--sp-3);
+  /* La misma columna centrada que el resto del panel en pantalla ancha. */
+  max-width: var(--ancho-max);
+  margin-inline: auto;
+}

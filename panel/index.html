@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel · El Rincón del Quijote</title>
+<meta name="theme-color" content="#93202A">
+
+<!-- El panel no se indexa jamas. Ademas de esto, deploy/Caddyfile manda la
+     cabecera X-Robots-Tag para toda la ruta /panel. -->
+<meta name="robots" content="noindex, nofollow">
+
+<!-- Sin CDNs: tipografias, estilos y el SDK de PocketBase salen de este mismo
+     dominio (seccion 4 del encargo). -->
+<link rel="preload" href="/compartido/fuentes/alegreya-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/compartido/fuentes/alegreya-sc-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/compartido/fuentes/cormorant-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/compartido/fuentes/cormorant-garamond-italica.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/compartido/fuentes/fuentes.css">
+<link rel="stylesheet" href="/compartido/css/tokens.css">
+<link rel="stylesheet" href="/compartido/css/base.css">
+<link rel="stylesheet" href="/panel/css/panel.css">
+<link rel="icon" href="/compartido/img/logo.svg" type="image/svg+xml">
+
+<!-- PWA (fase 10). El panel se instala en la pantalla de inicio del movil: es
+     como Santi lo va a abrir, no escribiendo una URL. El service worker que lo
+     hace funcionar sin cobertura se registra desde js/pwa.js. -->
+<link rel="manifest" href="/panel/manifest.webmanifest">
+<!-- iOS no lee el manifiesto: el icono y el modo pantalla completa los saca de
+     estas tres etiquetas suyas. -->
+<link rel="apple-touch-icon" href="/panel/img/icono-apple-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Quijote">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<a class="saltar" href="#app">Saltar al contenido</a>
+
+<!-- Todo se pinta desde js/app.js. Lo unico que hay de partida es el aviso de
+     que hace falta JavaScript: el panel es una aplicacion, no un documento, y
+     sin JS no hay nada que ensenar. -->
+<main id="app">
+  <noscript>
+    <div style="padding:32px 24px;text-align:center">
+      <p style="font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:30px;color:#6E141C">
+        El Rincón del Quijote
+      </p>
+      <p style="margin-top:12px;color:#786A5E">
+        El panel de gestión necesita JavaScript activado.
+      </p>
+    </div>
+  </noscript>
+</main>
+
+<script type="module" src="/panel/js/app.js"></script>
+</body>
+</html>

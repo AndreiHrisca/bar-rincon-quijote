@@ -1,0 +1,22 @@
+# Estado en ejecucion
+backups/
+deploy/logs/
+deploy/standalone/logs/
+pb_data/
+
+# Tipografias: los originales de Google se descargan con
+# scripts/descargar-fuentes.sh; lo que se versiona es el resultado recortado
+# de compartido/fuentes/, que es lo que se sirve.
+assets/tipografias/woff2/
+assets/tipografias/gf.css
+assets/tipografias/faces.json
+
+# Pruebas
+node_modules/
+pruebas/resultados/
+pruebas/informes/
+.playwright/
+
+# Sistema
+*.log
+.DS_Store

@@ -1,0 +1,323 @@
+# -----------------------------------------------------------------------------
+# CARTA — El Rincon del Quijote
+# -----------------------------------------------------------------------------
+# ESTA ES LA CARTA REAL DEL BAR, la que paso el cliente el 2026-09-04. Sustituye
+# por completo a las filas de ejemplo que habia aqui antes.
+#
+# DOS COSAS QUE FALTAN Y QUE TIENE QUE DAR EL CLIENTE:
+#
+#   1. LOS PRECIOS. La lista llego sin ellos, asi que las dos columnas de precio
+#      van vacias. Un plato sin precio SE GUARDA pero NO SALE EN LA CARTA
+#      PUBLICA: lo impide la regla de acceso de la coleccion, no solo la
+#      pantalla (DECISIONES.md, D-76). En el panel se ven con un «Sin precio»,
+#      igual que los productos «sin configurar» del almacen.
+#      Para ponerlos: se rellenan aqui las columnas y se vuelve a importar (el
+#      importador actualiza, no duplica), o se teclean desde el panel.
+#
+#   2. CONFIRMAR LOS ALERGENOS. Los de este fichero son los que estimo el
+#      cliente, y venian marcados como «estimado» en su propia lista. La
+#      informacion de alergenos es OBLIGATORIA POR LEY (Reglamento UE 1169/2011)
+#      y de ella responde el bar: hay que repasarlos plato por plato antes de
+#      publicar la carta.
+#
+# Columnas:
+#   categoria        Nombre de la categoria. Se crea si no existe.
+#   nombre           Nombre del plato. Se identifica por nombre Y categoria, asi
+#                    que dos categorias pueden tener un plato que se llame igual
+#                    («Casera», «Pincho de tortilla»).
+#   descripcion      Texto corto. Puede ir vacio.
+#   precio_barra     Precio en barra, en euros. Coma o punto decimal, da igual.
+#                    VACIO = todavia no tiene precio y no sale en la carta.
+#   precio_terraza   Precio en terraza y salon (las dos zonas comparten precio;
+#                    en la carta la columna se rotula "Terraza / Salon").
+#                    SI SE DEJA VACIO se muestra un unico
+#                    precio en la carta, no se calcula ningun recargo.
+#   alergenos        Separados por |. Los 14 oficiales de la UE, en minusculas:
+#                    gluten, crustaceos, huevos, pescado, cacahuetes, soja,
+#                    lacteos, frutos_cascara, apio, mostaza, sesamo, sulfitos,
+#                    altramuces, moluscos
+#
+# Se importa asi (es idempotente: se puede repetir):
+#   docker exec quijote-pocketbase pocketbase importar-carta seed/carta.csv --dir=/pb/pb_data
+#
+# Las lineas que empiezan por # se ignoran.
+# -----------------------------------------------------------------------------
+categoria,nombre,descripcion,precio_barra,precio_terraza,alergenos
+Cafés e infusiones,Café solo,Café espresso tradicional,,,
+Cafés e infusiones,Café para llevar,Café solo servido en vaso para llevar,,,
+Cafés e infusiones,Colacao,Chocolate a la taza con leche,,,lacteos
+Cafés e infusiones,Colacao tostada,Colacao acompañado de tostada,,,lacteos|gluten
+Cafés e infusiones,Bebida con tortilla,Café o colacao acompañado de tortilla de patata,,,lacteos|huevos
+Cafés e infusiones,Bebida con tostada,Café o colacao acompañado de tostada,,,lacteos|gluten
+Cafés e infusiones,Suplemento colacao,Suplemento de colacao añadido a otro producto,,,lacteos
+Cafés e infusiones,Café con tortilla,Café con leche o solo con tortilla de patata,,,lacteos|huevos
+Cafés e infusiones,Café con tortilla especial,Variante especial del café con tortilla,,,lacteos|huevos
+Cafés e infusiones,Desayuno mixto,Combinado de café/bebida y tostada mixta,,,gluten|lacteos
+Cafés e infusiones,Café con licor,Café solo con licor (tipo carajillo),,,sulfitos
+Cafés e infusiones,Café bombón,Café espresso con leche condensada,,,lacteos
+Cafés e infusiones,Café cortado,Espresso con un toque de leche,,,lacteos
+Cafés e infusiones,Café americano,Café largo estilo americano,,,
+Cafés e infusiones,Café con leche,Espresso con leche,,,lacteos
+Cafés e infusiones,Liyo,Café con licor (carajillo),,,sulfitos
+Cafés e infusiones,Poleo menta,Infusión de poleo menta,,,
+Cafés e infusiones,Manzanilla,Infusión de manzanilla,,,
+Cafés e infusiones,Té rojo,Infusión de té rojo,,,
+Cafés e infusiones,Rooibos,Infusión de rooibos,,,
+Cafés e infusiones,Té,Infusión de té,,,
+Cafés e infusiones,Tila,Infusión de tila,,,
+Cafés e infusiones,Té verde,Infusión de té verde,,,
+Cafés e infusiones,Café moyet especial,Variante especial de café moyet,,,lacteos
+Cafés e infusiones,Descafeinado,Café descafeinado,,,
+Cafés e infusiones,Café mollete,Café acompañado de mollete,,,gluten|lacteos
+Cafés e infusiones,Desayuno con tomate natural,Tostada con tomate natural,,,gluten
+Cafés e infusiones,Merienda (croissant),Croissant de merienda,,,gluten|huevos|lacteos
+Cafés e infusiones,Extra de bollo,Bollo extra de acompañamiento,,,gluten|huevos|lacteos
+Cervezas,Copa 33 sin Mahou,"Copa de cerveza Mahou sin alcohol, 33cl",,,gluten
+Cervezas,Copa Mahou 33cl,"Copa de cerveza Mahou, 33cl",,,gluten
+Cervezas,Tercio Mahou,Botellín de cerveza Mahou (tercio),,,gluten
+Cervezas,Tercio gluten,Botellín de cerveza con gluten estándar,,,gluten
+Cervezas,Radler 33cl,"Cerveza radler con limón, 33cl",,,gluten
+Cervezas,Reserva,Cerveza Mahou Reserva,,,gluten
+Cervezas,Maestra,Cerveza Mahou Maestra,,,gluten
+Cervezas,Alhambra roja,Cerveza Alhambra Roja,,,gluten
+Cervezas,Alhambra verde,Cerveza Alhambra especial (verde),,,gluten
+Cervezas,Jarra Mahou 50cl,"Jarra de cerveza Mahou, 50cl",,,gluten
+Cervezas,Jarra 50 sin Mahou,"Jarra de cerveza sin alcohol, 50cl",,,gluten
+Cervezas,Jarra 1L Mahou,Jarra de cerveza Mahou de 1 litro,,,gluten
+Cervezas,Barrica,Cerveza de barril,,,gluten
+Cervezas,1906 Tercio,Botellín de cerveza Estrella Galicia 1906,,,gluten
+Cervezas,Estrella Galicia,Cerveza Estrella Galicia,,,gluten
+Cervezas,Tinto de verano 1L,Tinto de verano servido en jarra de 1 litro,,,sulfitos
+Cervezas,Ladrón de manzanas,Sidra de manzana,,,sulfitos
+Cervezas,Aperitivo (1-6),"Caña de aperitivo, numerada por mesa",,,gluten
+Cervezas,Casera,Gaseosa casera para mezclar,,,
+Cervezas,...limón,Cerveza o bebida servida con limón,,,gluten
+Vinos y espumosos,Copa semi dulce,Copa de vino semidulce,,,sulfitos
+Vinos y espumosos,Copa Tierra de Aranda,Copa de vino Tierra de Aranda,,,sulfitos
+Vinos y espumosos,Copa Rivendel,Copa de vino Rivendel,,,sulfitos
+Vinos y espumosos,Copa Abadía Rioja,Copa de vino Abadía Rioja,,,sulfitos
+Vinos y espumosos,Tinto de verano 50cl,"Tinto de verano, 50cl",,,sulfitos
+Vinos y espumosos,Tinto de verano ZZ,Tinto de verano sin azúcar/zero,,,sulfitos
+Vinos y espumosos,Tinto de verano naranja,Tinto de verano con sabor naranja,,,sulfitos
+Vinos y espumosos,Tinto vermouth,Vino tinto con vermut,,,sulfitos
+Vinos y espumosos,Rioja Crianza,Copa de vino Rioja Crianza,,,sulfitos
+Vinos y espumosos,Fino,Copa de vino fino (jerez),,,sulfitos
+Vinos y espumosos,Calimocho 50cl,"Calimocho (vino tinto con refresco de cola), 50cl",,,sulfitos
+Vinos y espumosos,Blanco Rueda,Copa de vino blanco Rueda,,,sulfitos
+Vinos y espumosos,Tinto blanco,Mezcla de vino tinto y blanco,,,sulfitos
+Vinos y espumosos,Botella Rivendel,Botella de vino Rivendel,,,sulfitos
+Vinos y espumosos,Botella Rueda,Botella de vino Rueda,,,sulfitos
+Vinos y espumosos,Botella Abadía,Botella de vino Abadía,,,sulfitos
+Vinos y espumosos,Botella semidulce,Botella de vino semidulce,,,sulfitos
+Vinos y espumosos,Botella crianza (B. Crianza),Botella de vino crianza,,,sulfitos
+Licores y coñac,Martini rojo,Vermut Martini rojo,,,sulfitos
+Licores y coñac,Martini blanco,Vermut Martini blanco,,,sulfitos
+Licores y coñac,Pacharán,Licor de pacharán,,,sulfitos
+Licores y coñac,Mora sin,Licor de mora sin alcohol,,,
+Licores y coñac,Frangelico,Licor de avellana,,,frutos_cascara|sulfitos
+Licores y coñac,Veterano,Brandy Veterano,,,sulfitos
+Licores y coñac,Magno,Brandy Magno,,,sulfitos
+Licores y coñac,Tequila chupito,Chupito de tequila,,,sulfitos
+Licores y coñac,Licor 43,Licor 43,,,sulfitos
+Licores y coñac,Terry,Brandy Terry,,,sulfitos
+Licores y coñac,Ponche,Licor de ponche,,,sulfitos
+Licores y coñac,Izaguirre,Pacharán Izaguirre,,,sulfitos
+Licores y coñac,Crema de orujo,Crema de orujo,,,sulfitos|lacteos
+Licores y coñac,Manzana sin/con,Chupito o licor de manzana,,,sulfitos
+Licores y coñac,Melocotón sin/con,Chupito o licor de melocotón,,,sulfitos
+Licores y coñac,Chupitos,Chupito genérico (varios sabores),,,sulfitos
+Licores y coñac,Chupito importado,Chupito de importación,,,sulfitos
+Licores y coñac,Cointreau,Licor de naranja Cointreau,,,sulfitos
+Licores y coñac,Castellana,Licor Castellana,,,sulfitos
+Licores y coñac,Espléndido,Licor Espléndido,,,sulfitos
+Licores y coñac,Zarro vermut,Vermut Zarro,,,sulfitos
+Licores y coñac,Licor de hierbas,Licor de hierbas,,,sulfitos
+Licores y coñac,Malibú,Licor de coco Malibú,,,sulfitos
+Licores y coñac,Marie Brizard,Licor Marie Brizard,,,sulfitos
+Licores y coñac,Soberano,Brandy Soberano,,,sulfitos
+Licores y coñac,Baileys,Crema irlandesa de whisky Baileys,,,lacteos|sulfitos
+Licores y coñac,Orujo blanco,Orujo blanco,,,sulfitos
+Licores y coñac,Chinchón,Anís Chinchón,,,sulfitos
+Combinados,Brugal,Ron Brugal,,,sulfitos
+Combinados,Legendario,Ron Legendario,,,sulfitos
+Combinados,Pampero,Ron Pampero,,,sulfitos
+Combinados,Bacardí,Ron Bacardí,,,sulfitos
+Combinados,Cacique,Ron Cacique,,,sulfitos
+Combinados,Barceló,Ron Barceló,,,sulfitos
+Combinados,Matusalem,Ron Matusalem,,,sulfitos
+Combinados,Nordés,Ginebra Nordés,,,sulfitos
+Combinados,Larios,Ginebra Larios,,,sulfitos
+Combinados,Larios Rosé,Ginebra Larios Rosé,,,sulfitos
+Combinados,Larios 12,Ginebra Larios 12,,,sulfitos
+Combinados,Tanqueray,Ginebra Tanqueray,,,sulfitos
+Combinados,"Tanqueray 0,0",Ginebra Tanqueray sin alcohol,,,sulfitos
+Combinados,Beefeater,Ginebra Beefeater,,,sulfitos
+Combinados,Puerto de Indias,Ginebra Puerto de Indias,,,sulfitos
+Combinados,Bombay Sapphire,Ginebra Bombay Sapphire,,,sulfitos
+Combinados,Seagram's,Ginebra Seagram's,,,sulfitos
+Combinados,Absolut,Vodka Absolut,,,sulfitos
+Combinados,J&B,Whisky J&B,,,sulfitos
+Combinados,Four Roses,Whisky Four Roses,,,sulfitos
+Combinados,DYC,Whisky DYC,,,sulfitos
+Combinados,DYC 8 años,Whisky DYC 8 años,,,sulfitos
+Combinados,Cutty Sark,Whisky Cutty Sark,,,sulfitos
+Combinados,Passport,Whisky Passport,,,sulfitos
+Combinados,Ballantine's,Whisky Ballantine's,,,sulfitos
+Combinados,Jack Daniel's,Whisky Jack Daniel's,,,sulfitos
+Combinados,100 Pipers,Whisky 100 Pipers,,,sulfitos
+Combinados,Johnnie Walker,Whisky Johnnie Walker,,,sulfitos
+Combinados,Jameson,Whisky Jameson,,,sulfitos
+Combinados,Black Label 12,Whisky Black Label 12 años,,,sulfitos
+Combinados,White Label,Whisky White Label,,,sulfitos
+Refrescos y aguas,Coca Cola,Refresco de cola,,,
+Refrescos y aguas,Coca Cola Cero,Refresco de cola sin azúcar,,,
+Refrescos y aguas,Coca Cola ZZ,Refresco de cola zero-zero,,,
+Refrescos y aguas,Nestea,Té frío Nestea,,,
+Refrescos y aguas,Nestea maracuyá,Té frío sabor maracuyá,,,
+Refrescos y aguas,Agua con gas (Perrier),Agua mineral con gas,,,
+Refrescos y aguas,Agua 1L,"Botella de agua mineral, 1 litro",,,
+Refrescos y aguas,Vaso de agua,Vaso de agua,,,
+Refrescos y aguas,Casera,Gaseosa casera,,,
+Refrescos y aguas,Soda water,Agua de soda,,,
+Refrescos y aguas,Tónica,Agua tónica,,,
+Refrescos y aguas,Fanta limón,Refresco Fanta limón,,,
+Refrescos y aguas,Fanta naranja,Refresco Fanta naranja,,,
+Refrescos y aguas,Sprite,Refresco de lima-limón,,,
+Refrescos y aguas,Ginger ale,Refresco ginger ale,,,
+Refrescos y aguas,Monster,Bebida energética Monster,,,
+Refrescos y aguas,Redbull,Bebida energética Red Bull,,,
+Refrescos y aguas,Aquarius naranja,Bebida isotónica sabor naranja,,,
+Refrescos y aguas,Aquarius limón,Bebida isotónica sabor limón,,,
+Refrescos y aguas,Aquarius melocotón,Bebida isotónica sabor melocotón,,,
+Refrescos y aguas,Zumo de naranja,Zumo natural o de bote de naranja,,,
+Refrescos y aguas,Zumo de piña,Zumo de piña,,,
+Refrescos y aguas,Zumo de melocotón,Zumo de melocotón,,,
+Refrescos y aguas,Zumo de tomate,Zumo de tomate,,,apio
+Refrescos y aguas,Mosto,Mosto de uva sin alcohol,,,sulfitos
+Refrescos y aguas,Botella de agua,Botella de agua mineral,,,
+Bocadillos,Bocadillo de jamón,Bocadillo de jamón serrano,,,gluten
+Bocadillos,Bocadillo de tortilla de patata,Bocadillo con tortilla de patata,,,gluten|huevos
+Bocadillos,Bocadillo de tortilla francesa,Bocadillo con tortilla francesa,,,gluten|huevos
+Bocadillos,Bocadillo de panceta,Bocadillo de panceta a la plancha,,,gluten
+Bocadillos,Bocadillo de cinta de lomo,Bocadillo de cinta de lomo,,,gluten
+Bocadillos,Bocadillo de pepito de ternera,Bocadillo de pepito de ternera,,,gluten
+Bocadillos,Bocadillo de pollo,Bocadillo de pollo a la plancha,,,gluten
+Bocadillos,Bocadillo de queso en aceite,Bocadillo de queso curado en aceite,,,gluten|lacteos
+Bocadillos,Bocadillo de calamares,Bocadillo de calamares rebozados,,,gluten|moluscos|huevos
+Bocadillos,Bocadillo de bacon,Bocadillo de bacon a la plancha,,,gluten
+Bocadillos,Bocadillo de chorizo,Bocadillo de chorizo,,,gluten
+Bocadillos,Bocadillo de lacón,Bocadillo de lacón,,,gluten
+Bocadillos,Bocadillo de boquerones en vinagre,Bocadillo de boquerones en vinagre,,,gluten|pescado
+Bocadillos,Con alioli,Suplemento de alioli,,,huevos
+Bocadillos,Con queso,Suplemento de queso,,,lacteos
+Bocadillos,Con pimientos,Suplemento de pimientos,,,
+Bocadillos,Con bacon,Suplemento de bacon,,,
+Bocadillos,Con tomate,Suplemento de tomate,,,
+Bocadillos,Con mahonesa,Suplemento de mahonesa,,,huevos
+Bocadillos,Con atún,Suplemento de atún,,,pescado
+Montaditos,Montadito de boquerones,Montadito de boquerones en vinagre,,,gluten|pescado
+Montaditos,Montadito de tortilla francesa,Montadito de tortilla francesa,,,gluten|huevos
+Montaditos,Montadito de calamares,Montadito de calamares,,,gluten|moluscos
+Montaditos,Montadito de chorizo,Montadito de chorizo,,,gluten
+Montaditos,Montadito de lomo,Montadito de lomo,,,gluten
+Montaditos,Montadito de queso,Montadito de queso,,,gluten|lacteos
+Montaditos,Montadito de jamón,Montadito de jamón,,,gluten
+Montaditos,Montadito de bacon,Montadito de bacon,,,gluten
+Montaditos,Montadito de lacón,Montadito de lacón,,,gluten
+Montaditos,Montadito de panceta,Montadito de panceta,,,gluten
+Montaditos,Montadito de tortilla de papas,Montadito de tortilla de patatas,,,gluten|huevos
+Montaditos,Montadito de atún,Montadito de atún,,,gluten|pescado
+Hamburguesas y sándwiches,Hamburguesa solo carne,Hamburguesa de carne sin pan,,,
+Hamburguesas y sándwiches,Hamburguesa normal,Hamburguesa de carne con pan,,,gluten
+Hamburguesas y sándwiches,Hamburguesa bacon,Hamburguesa con bacon,,,gluten
+Hamburguesas y sándwiches,Hamburguesa queso,Hamburguesa con queso,,,gluten|lacteos
+Hamburguesas y sándwiches,Hamburguesa huevo,Hamburguesa con huevo frito,,,gluten|huevos
+Hamburguesas y sándwiches,Sándwich mixto,Sándwich de jamón y queso,,,gluten|lacteos
+Hamburguesas y sándwiches,Sándwich mixto con huevo,Sándwich mixto con huevo,,,gluten|lacteos|huevos
+Hamburguesas y sándwiches,Sándwich vegetal,Sándwich de verduras,,,gluten
+Hamburguesas y sándwiches,Sándwich de pollo,Sándwich de pollo,,,gluten
+Hamburguesas y sándwiches,Mixto vegetal,Sándwich mixto con verduras,,,gluten|lacteos
+Hamburguesas y sándwiches,Pincho de tortilla,Pincho pequeño de tortilla de patata,,,huevos
+Hamburguesas y sándwiches,Extra patatas,Ración extra de patatas fritas,,,
+Hamburguesas y sándwiches,Sin mahonesa,Personalización sin mahonesa,,,
+Hamburguesas y sándwiches,Sin queso,Personalización sin queso,,,
+Hamburguesas y sándwiches,Sin cebolla,Personalización sin cebolla,,,
+Hamburguesas y sándwiches,Sin tomate,Personalización sin tomate,,,
+Hamburguesas y sándwiches,Sin verdura,Personalización sin verdura,,,
+Hamburguesas y sándwiches,Sin mostaza,Personalización sin mostaza,,,
+Hamburguesas y sándwiches,Sin lechuga,Personalización sin lechuga,,,
+Hamburguesas y sándwiches,Sin ali-oli,Personalización sin ali-oli,,,
+Tostas,Canapé de ternera,Canapé de ternera,,,gluten
+Tostas,Canapé de trigueros,Canapé de espárragos trigueros,,,gluten
+Tostas,Canapé de gambas,Canapé de gambas,,,gluten|crustaceos
+Tostas,Canapé de roquefort,Canapé de queso roquefort,,,gluten|lacteos
+Tostas,Canapé de roquefort con anchoas,Canapé de roquefort con anchoas,,,gluten|lacteos|pescado
+Tostas,Canapé de calamares,Canapé de calamares,,,gluten|moluscos
+Tostas,Canapé de jamón con tumaca,Canapé de jamón con tomate,,,gluten
+Tostas,Canapé generoso,Canapé variedad generoso,,,gluten
+Tostas,Canapé de queso en aceite,Canapé de queso en aceite,,,gluten|lacteos
+Tostas,Canapé matrimonio de anchoas,Canapé de anchoas y boquerón,,,gluten|pescado
+Tostas,Canapé de morcilla de Burgos,Canapé de morcilla de Burgos,,,gluten
+Tostas,Canapé italiano,Canapé estilo italiano,,,gluten|lacteos
+Tostas,Canapé de solomillo,Canapé de solomillo,,,gluten
+Tostas,Canapé de salmón,Canapé de salmón,,,gluten|pescado
+Tostas,Canapé de gulas,Canapé de gulas,,,gluten|pescado
+Tostas,Canapé de pollo,Canapé de pollo,,,gluten
+Raciones,Chopitos,Ración de chopitos fritos,,,moluscos|gluten
+Raciones,Patatas mixtas,Ración de patatas mixtas,,,
+Raciones,Patatas bravas,Ración de patatas bravas con salsa,,,huevos|mostaza
+Raciones,Pincho de tortilla,Ración de pincho de tortilla,,,huevos
+Raciones,Boquerones en vinagre,Ración de boquerones en vinagre,,,pescado
+Raciones,Boquerones fritos,Ración de boquerones fritos,,,pescado|gluten
+Raciones,Patatas bastón,Patatas fritas en formato bastón,,,
+Raciones,Sepia,Ración de sepia a la plancha,,,moluscos
+Raciones,Chorizo de pueblo,Ración de chorizo de pueblo,,,
+Raciones,Pan,Ración de pan de acompañamiento,,,gluten
+Raciones,Tortilla de patatas,Ración de tortilla de patatas,,,huevos
+Raciones,Croquetas de jamón,Ración de croquetas de jamón,,,gluten|lacteos|huevos
+Raciones,Cazón en adobo,Ración de cazón en adobo,,,pescado|gluten
+Raciones,Huevos rotos,Huevos rotos con patatas,,,huevos
+Raciones,Huevos rotos con gulas,Huevos rotos con gulas,,,huevos|pescado
+Raciones,Revuelto de morcilla,Revuelto de huevo con morcilla,,,huevos
+Raciones,Morcilla de Burgos,Ración de morcilla de Burgos,,,
+Raciones,Alitas de pollo,Ración de alitas de pollo,,,
+Raciones,Oreja a la plancha,Oreja de cerdo a la plancha,,,
+Raciones,Parrillada,Parrillada de carnes o verduras,,,
+Raciones,Calamares,Ración de calamares fritos,,,moluscos|gluten|huevos
+Raciones,Brocheta de pollo,Brocheta de pollo a la plancha,,,
+Raciones,Salsa aparte,Salsa servida aparte,,,huevos|mostaza
+Ensaladas,Ensalada ventresca,Ensalada con ventresca de atún,,,pescado
+Ensaladas,Ensalada César,Ensalada César con pollo,,,gluten|lacteos|huevos|pescado
+Ensaladas,Ensalada de tomate,Ensalada de tomate,,,
+Ensaladas,Ensalada campera,Ensalada campera con patata y atún,,,pescado|huevos
+Ensaladas,Ensalada mixta,Ensalada mixta variada,,,
+Postres,Postres variados,Selección de postres del día. Los alérgenos dependen de lo que se elija: pregunta en la barra.,,,lacteos|huevos|gluten
+Postres,Tarta de chocolate,Tarta de chocolate,,,gluten|huevos|lacteos
+Postres,Tarta de queso,Tarta de queso,,,gluten|huevos|lacteos
+Postres,Natillas,Natillas caseras,,,lacteos|huevos
+Postres,Tiramisú,Tiramisú,,,lacteos|huevos|gluten
+Postres,Mousse,Mousse de chocolate,,,lacteos|huevos
+Postres,Arroz con leche,Arroz con leche,,,lacteos
+Menú del día,Menú / medio menú,"Menú del día completo o reducido (1º, 2º, pan, bebida). Los alérgenos dependen de lo que se elija: pregunta en la barra.",,,
+Menú del día,Parrillada de verduras,Verduras variadas a la parrilla,,,
+Menú del día,Bacalao con habas,Bacalao con habas,,,pescado
+Menú del día,Jamón y queso,Jamón y queso ibérico,,,lacteos
+Menú del día,Ibéricos,Tabla de ibéricos,,,
+Menú del día,Suplemento cerveza,Suplemento por cerveza incluida en el menú,,,gluten
+Menú del día,Chuletón 600g,"Chuletón de ternera, 600g",,,
+Menú del día,Lubina,Lubina a la plancha,,,pescado
+Menú del día,Crujiente de morcilla,Morcilla envuelta en hojaldre crujiente,,,gluten
+Menú del día,Trigueros con aguacate,Espárragos trigueros con aguacate,,,
+Menú del día,Arroz carabinero,Arroz con carabineros,,,crustaceos
+Menú del día,Chuletón,Chuletón de ternera,,,
+Menú del día,Paella,Paella tradicional. Los alérgenos dependen de lo que se elija: pregunta en la barra.,,,crustaceos|moluscos
+Menú del día,Menú Navidad,Menú especial de Navidad. Los alérgenos dependen de lo que se elija: pregunta en la barra.,,,
+Menú del día,Lomo de ternera 500g,"Lomo de ternera, 500g",,,
+Menú del día,Menú fin de semana,Menú especial de fin de semana. Los alérgenos dependen de lo que se elija: pregunta en la barra.,,,
+Platos combinados,Combinado 1,Plato combinado nº1. Los alérgenos dependen de lo que se elija: pregunta en la barra.,,,
+Platos combinados,Combinado 2,Plato combinado nº2. Los alérgenos dependen de lo que se elija: pregunta en la barra.,,,
+Platos combinados,Huevo con papas,Huevos fritos con patatas,,,huevos
+Platos combinados,Croquetas de calamar/gambas,Croquetas de calamar o de gambas,,,gluten|lacteos|huevos|moluscos|crustaceos
+Platos combinados,Pimientos de piquillo,Pimientos de piquillo,,,
+Platos combinados,Langostinos,Langostinos a la plancha,,,crustaceos
+Platos combinados,Entrecot 360g,"Entrecot de ternera, 360g",,,

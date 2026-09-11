@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------------
+# Superposicion para servidor limpio — El Rincon del Quijote
+# ---------------------------------------------------------------------------
+# Se aplica ENCIMA de docker-compose.yml y cambia dos cosas: el Caddy del
+# proyecto pasa a publicar los puertos 80/443 y a terminar TLS por su cuenta, y
+# deja de colgar de la red externa "edge" del proxy compartido.
+#
+#   docker compose -f docker-compose.yml -f deploy/standalone/compose.yml up -d
+# ---------------------------------------------------------------------------
+services:
+
+  web:
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"      # HTTP/3
+    volumes:
+      - ./deploy/standalone/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+      - ./panel:/srv/panel:ro
+      - ./compartido:/srv/compartido:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./deploy/standalone/logs:/var/log/caddy
+    networks:
+      - interna
+
+volumes:
+  caddy_data:
+  caddy_config:

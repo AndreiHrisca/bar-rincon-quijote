@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>El Rincón del Quijote — Carta y reservas</title>
+<meta name="description" content="Carta y reservas del bar El Rincón del Quijote, en Ciudad de los Ángeles (Madrid). Abierto todos los días de 08:00 a 02:00.">
+<meta name="theme-color" content="#93202A">
+
+<!-- Sin CDNs ni tipografías remotas: todo se sirve desde este dominio. La web
+     no hace ni una petición a terceros, que es lo que permite prometerlo en la
+     política de privacidad (secciones 4 y 12 del encargo). -->
+<!-- Solo se precargan las tres variantes que la PORTADA pinta de verdad. Una
+     precarga de mas no es gratis: obliga al navegador a descargarla aunque la
+     pantalla no la use. Precargar aqui Alegreya SC 500 (que solo usa la carta)
+     costaba 16 KB de la primera carga para nada. -->
+<link rel="preload" href="/compartido/fuentes/cormorant-garamond-italica.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/compartido/fuentes/alegreya-sc-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/compartido/fuentes/alegreya-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/compartido/fuentes/fuentes.css">
+<link rel="stylesheet" href="/compartido/css/tokens.css">
+<link rel="stylesheet" href="/compartido/css/base.css">
+<link rel="stylesheet" href="/css/web.css">
+<link rel="icon" href="/compartido/img/logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://barrinconquijote.es/">
+</head>
+<body>
+
+<a class="saltar" href="#app">Saltar al contenido</a>
+
+<!-- Todo se pinta aquí desde js/app.js. El contenido de partida es el nombre
+     del bar y el teléfono: si el JavaScript fallara, quien escanea el QR al
+     menos ve a quién está llamando y a qué número. -->
+<main id="app">
+  <noscript>
+    <div style="padding:32px 24px;text-align:center">
+      <p style="font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:30px;color:#6E141C">
+        El Rincón del Quijote
+      </p>
+      <p style="margin-top:12px;color:#7E6F63">
+        Para ver la carta hace falta activar JavaScript.
+        También puedes llamarnos al <a href="tel:912881027" style="color:#93202A;font-weight:700">91 288 10 27</a>.
+      </p>
+    </div>
+  </noscript>
+</main>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

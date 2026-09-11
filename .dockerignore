@@ -1,0 +1,9 @@
+.git
+backups
+deploy/logs
+deploy/standalone/logs
+assets/tipografias/woff2
+node_modules
+pruebas
+docs
+design

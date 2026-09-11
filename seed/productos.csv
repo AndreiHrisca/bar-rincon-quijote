@@ -1,0 +1,45 @@
+# -----------------------------------------------------------------------------
+# PRODUCTOS DEL ALMACEN — El Rincon del Quijote
+# -----------------------------------------------------------------------------
+# ATENCION: LAS FILAS DE ESTE FICHERO SON FICTICIAS, DE EJEMPLO.
+#
+# El almacen real lo aporta el cliente: lo que hay en la camara y en el sotano
+# no se puede adivinar. Estas filas existen solo para probar el formato y para
+# poder ver el recuento y la lista de pedido con datos. NO SE SUBEN A PRODUCCION.
+#
+# Columnas:
+#   nombre             Como se le llama en la cocina, no el nombre comercial.
+#   categoria_almacen  carne, pescado, verdura, lacteos, bebidas, congelados,
+#                      seco, limpieza, desechables, otros
+#   unidad             Texto libre: kg, litros, unidades, cajas, bandejas,
+#                      botellas, barriles...
+#   stock_minimo       A partir de aqui hay que pedir. De esto sale la lista.
+#   pedido_habitual    Cuanto se suele pedir. Es la cantidad sugerida, editable.
+#   proveedor          Nombre del proveedor. Se crea si no existe. Puede ir vacio.
+#   ubicacion          camara, congelador, sotano, barra, cocina, otros
+#                      ES EL ORDEN DEL RECORRIDO FISICO del recuento: se cuenta
+#                      agrupado por esto porque asi es como se camina el almacen.
+#
+# Las lineas que empiezan por # se ignoran.
+# -----------------------------------------------------------------------------
+nombre,categoria_almacen,unidad,stock_minimo,pedido_habitual,proveedor,ubicacion
+Huevos [EJEMPLO],otros,docenas,4,12,Distribuciones de ejemplo,camara
+Patatas [EJEMPLO],verdura,kg,15,50,Frutas de ejemplo,sotano
+Jamon iberico [EJEMPLO],carne,piezas,1,2,Distribuciones de ejemplo,camara
+Ternera picada [EJEMPLO],carne,kg,3,10,Carnicas de ejemplo,camara
+Salmon ahumado [EJEMPLO],pescado,bandejas,2,6,Pescados de ejemplo,camara
+Calamares [EJEMPLO],congelados,kg,4,10,Pescados de ejemplo,congelador
+Queso de cabra [EJEMPLO],lacteos,rulos,2,6,Distribuciones de ejemplo,camara
+Nata [EJEMPLO],lacteos,litros,2,6,Distribuciones de ejemplo,camara
+Pan de bocadillo [EJEMPLO],seco,unidades,20,60,Panaderia de ejemplo,cocina
+Pan de tosta [EJEMPLO],seco,unidades,15,40,Panaderia de ejemplo,cocina
+Lechuga [EJEMPLO],verdura,unidades,6,20,Frutas de ejemplo,camara
+Tomate [EJEMPLO],verdura,kg,5,15,Frutas de ejemplo,camara
+Cebolla [EJEMPLO],verdura,kg,4,12,Frutas de ejemplo,sotano
+Pimientos de padron [EJEMPLO],verdura,kg,2,6,Frutas de ejemplo,camara
+Aceite de oliva [EJEMPLO],seco,litros,10,25,Distribuciones de ejemplo,sotano
+Barril de cerveza [EJEMPLO],bebidas,barriles,2,4,Bebidas de ejemplo,sotano
+Vino tinto de la casa [EJEMPLO],bebidas,botellas,12,36,Bebidas de ejemplo,sotano
+Refrescos surtidos [EJEMPLO],bebidas,cajas,4,12,Bebidas de ejemplo,sotano
+Servilletas [EJEMPLO],desechables,paquetes,6,20,Distribuciones de ejemplo,sotano
+Lejia [EJEMPLO],limpieza,litros,3,8,Distribuciones de ejemplo,sotano

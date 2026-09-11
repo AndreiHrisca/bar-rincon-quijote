@@ -1,0 +1,98 @@
+# ---------------------------------------------------------------------------
+# Caddy autonomo — El Rincon del Quijote
+# ---------------------------------------------------------------------------
+# Esta es la configuracion que describe la seccion 4 del encargo: Caddy delante,
+# con TLS automatico para barrinconquijote.es y www, sirviendo los estaticos y
+# haciendo proxy de /api/* y /_/* hacia PocketBase.
+#
+# USALA SOLO EN UN SERVIDOR LIMPIO donde este proyecto sea lo unico que ocupa
+# los puertos 80 y 443. En el servidor actual hay un proxy central compartido y
+# se usa deploy/Caddyfile; ver DECISIONES.md, decision D-02.
+#
+#   docker compose -f docker-compose.yml -f deploy/standalone/compose.yml up -d
+#
+# Requisitos previos:
+#   - barrinconquijote.es y www.barrinconquijote.es apuntando (A/AAAA) a la IP
+#     del servidor. Sin DNS resuelto, Let's Encrypt no puede emitir.
+#   - Puertos 80 y 443 abiertos desde fuera.
+# ---------------------------------------------------------------------------
+
+{
+	# Correo para los avisos de caducidad de Let's Encrypt. Cambialo antes de
+	# desplegar: si el certificado falla, es la unica via de aviso.
+	email hola@barrinconquijote.es
+
+	log {
+		output file /var/log/caddy/quijote.log {
+			roll_size 10MB
+			roll_keep 14
+		}
+		format json
+		level INFO
+	}
+}
+
+# El sitio se canonicaliza sin www.
+www.barrinconquijote.es {
+	redir https://barrinconquijote.es{uri} permanent
+}
+
+barrinconquijote.es {
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Corta en seco los sondeos automaticos de scanners.
+	@sondeos path /.env* /.git /.git/* /wp-admin /wp-admin/* /wp-login* /xmlrpc.php
+	respond @sondeos 404
+
+	@pocketbase path /api/* /_/* /_
+	handle @pocketbase {
+		reverse_proxy pocketbase:8090 {
+			flush_interval -1
+		}
+	}
+
+	handle_path /compartido/* {
+		root * /srv/compartido
+		header Cache-Control "public, max-age=2592000"
+		@fuentes path *.woff2
+		header @fuentes {
+			Cache-Control "public, max-age=31536000, immutable"
+			Access-Control-Allow-Origin "*"
+		}
+		file_server
+	}
+
+	handle_path /panel* {
+		root * /srv/panel
+		header {
+			X-Robots-Tag "noindex, nofollow"
+			Cache-Control "no-cache"
+		}
+		@sw path /sw.js
+		header @sw Service-Worker-Allowed "/panel/"
+		# Go no conoce la extension .webmanifest y lo serviria como binario;
+		# entonces el navegador descarta el manifiesto y el panel deja de ser
+		# instalable, sin decir por que.
+		@manifiesto path /manifest.webmanifest
+		header @manifiesto Content-Type "application/manifest+json; charset=utf-8"
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+
+	handle {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		@estaticos path *.css *.js *.svg *.png *.jpg *.webp *.woff2
+		header @estaticos Cache-Control "public, max-age=604800"
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+
+	encode zstd gzip
+}

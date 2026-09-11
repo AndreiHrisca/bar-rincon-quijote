@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# Bloque para el Caddyfile del proxy central (~/stacks/webs/_proxy/Caddyfile)
+# ---------------------------------------------------------------------------
+# TODAVIA NO APLICADO. Es lo que hay que anadir a ese fichero para publicar
+# barrinconquijote.es. Se toca un fichero compartido con otros sitios en
+# produccion, asi que se aprueba antes de pegarlo.
+#
+# Requisito previo: los registros A/AAAA de barrinconquijote.es y
+# www.barrinconquijote.es tienen que apuntar a este servidor en OVH. Sin DNS
+# resuelto, Caddy no consigue el certificado y el sitio no levanta.
+#
+# Despues de pegarlo:
+#   docker exec caddy caddy validate --config /etc/caddy/Caddyfile
+#   docker exec caddy caddy reload  --config /etc/caddy/Caddyfile
+# (reload no corta las conexiones de los demas sitios)
+# ---------------------------------------------------------------------------
+
+# El Rincon del Quijote (stack ~/stacks/webs/bar-rincon-del-quijote).
+# Carta publica, reservas y panel de gestion sobre PocketBase. El contenedor
+# quijote-web no publica puertos: se alcanza por DNS interno de la red "edge".
+#
+# NO lleva "import protegido": la carta es publica, es la que abre el QR de las
+# mesas. El panel (/panel) tiene su propia autenticacion, la de PocketBase.
+barrinconquijote.es {
+	import logs quijote
+	import bloqueo_sondeos
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# flush_interval -1 desactiva el buffering: el canal de tiempo real de
+	# PocketBase va por SSE y con buffer el interruptor de disponibilidad de la
+	# carta no se refleja al instante en la web publica.
+	reverse_proxy quijote-web:8080 {
+		flush_interval -1
+	}
+}
+
+# El sitio se canonicaliza sin www, como el resto de sitios de este servidor.
+www.barrinconquijote.es {
+	import logs quijote
+	redir https://barrinconquijote.es{uri} permanent
+}

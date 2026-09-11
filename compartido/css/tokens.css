@@ -1,0 +1,170 @@
+/* ---------------------------------------------------------------------------
+   Tokens — El Rincon del Quijote
+   ---------------------------------------------------------------------------
+   FICHERO UNICO de variables compartido por web/ (carta publica) y panel/
+   (gestion). Seccion 14 del encargo: cero colores a pelo repartidos por el
+   codigo. Si necesitas un color que no esta aqui, el sitio de anadirlo es este.
+
+   Todo lo que hay debajo esta EXTRAIDO de las maquetas aprobadas
+   design/rincon-cliente.html y design/rincon-panel.html, que son la fuente de
+   verdad del diseno. No se ha inventado ningun valor. Donde las dos maquetas
+   discrepan se anota el motivo.
+--------------------------------------------------------------------------- */
+
+:root {
+
+  /* --- Marca ------------------------------------------------------------
+     El granate sale de la carta impresa. --granate-cl solo aparece en la
+     maqueta del cliente (degradados de cabecera y foto de plato). */
+  --granate:      #93202A;
+  --granate-osc:  #6E141C;
+  --granate-cl:   #B0303A;
+
+  /* --- Fondos -----------------------------------------------------------
+     Dos fondos distintos a proposito, y no es un descuido de las maquetas:
+     la carta va sobre crema calida (se lee en la terraza, de dia) y el panel
+     sobre --fondo-panel, mas apagado y con mucho mas blanco encima, porque se
+     usa de pie y a las once de la noche. */
+  --crema:        #FBF3E3;
+  --crema-2:      #FDF8EE;
+  --fondo-panel:  #F6EFE1;
+  --blanco:       #FFFFFF;
+
+  /* --- Texto ------------------------------------------------------------ */
+  --tinta:        #241A16;
+
+  /* --apagado se ha oscurecido respecto a la maqueta: #7E6F63 -> #786A5E.
+     El valor original daba 4,38:1 sobre crema, por debajo del minimo de 4,5:1
+     que exige WCAG AA para texto normal, y es el color de las DESCRIPCIONES DE
+     PLATO, que es justo lo que mas se lee en la carta. El nuevo da 4,73:1 sobre
+     crema y 5,22:1 sobre blanco. Mismo gris calido, un punto mas oscuro: a
+     simple vista no se distingue. Ver DECISIONES.md, D-17. */
+  --apagado:      #786A5E;
+
+  /* --- Trazo y separadores ---------------------------------------------- */
+  --linea:        #E5DAC5;
+  --cobre:        #A8672F;
+
+  /* --- Estado -----------------------------------------------------------
+     Los pares -bg son los fondos de las pastillas del panel. */
+  --ok:           #3F6E3A;
+  --ok-bg:        #E9F0E2;
+  --aviso:        #8A5A12;
+  --aviso-bg:     #FAEFD6;
+  --aviso-linea:  #E9D3A6;
+  /* Cuerpo del texto dentro de la caja de aviso. En la maqueta del panel es un
+     marron mas oscuro que el titulo, para que el parrafo se lea y el rotulo
+     siga cantando. */
+  --aviso-texto:  #6A4A11;
+
+  /* Rojo de marca reutilizado como estado negativo: en las maquetas la
+     pastilla "no vino" y la etiqueta de picante usan este mismo par, no un
+     rojo aparte. */
+  --error:        var(--granate);
+  --error-bg:     #F7E1E2;
+
+  /* Neutro para pastillas sin carga (estado "sentada", etiquetas de alergeno) */
+  --neutro-bg:    #F1E7D3;
+  --neutro-tinta: #7A6450;
+
+  /* Verde de la etiqueta vegetariana */
+  --veg:          #4C6438;
+  --veg-bg:       #E9EFE1;
+
+  /* --- Grises calidos auxiliares ----------------------------------------
+     Salen de las maquetas; son grises con temperatura, nunca grises neutros.
+     --tenue:   texto de marcador de posicion y flechas de lista
+     --tenue-2: pie de pagina, numeracion de ranking
+     --apagado-2: parrafos largos, algo mas oscuros que --apagado */
+  --tenue:        #A9998A;
+  --tenue-2:      #B0A08E;
+  --apagado-2:    #5A4C40;
+  --arrastre:     #CFC1AC;   /* flechas ">" y asideros de reordenar */
+  --interruptor:  #DCCFB9;   /* fondo del interruptor apagado */
+
+  /* --- Tipografia -------------------------------------------------------
+     Autoalojadas; ver compartido/fuentes/fuentes.css. */
+  --letra-titulo:  'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --letra-rotulo:  'Alegreya SC', Georgia, serif;
+  --letra-texto:   'Alegreya Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Escala de cuerpo, tal cual la usan las maquetas. Los valores con decimales
+     no son un capricho: son los de design/*.html y cambiarlos descuadra las
+     columnas de precios. */
+  --t-xs:    11.5px;
+  --t-s:     12.5px;
+  --t-sm:    13.5px;
+  --t-m:     14.5px;
+  --t-base:  15.5px;
+  --t-ml:    16px;
+  --t-l:     17px;
+  --t-xl:    22px;
+  --t-2xl:   25px;
+  --t-3xl:   30px;
+  --t-4xl:   33px;
+
+  /* Espaciado entre letras de las versalitas: sin esto Alegreya SC se apelmaza */
+  --track-rotulo:  .03em;
+  --track-cartel:  .05em;
+  --track-lema:    .06em;
+
+  /* --- Espaciado --------------------------------------------------------
+     Rejilla base de 4 px. Los margenes laterales difieren entre las dos
+     aplicaciones (22/20 px en la carta, 18/16 px en el panel) y se respeta. */
+  --e-1:   4px;
+  --e-2:   8px;
+  --e-3:   12px;
+  --e-4:   16px;
+  --e-5:   20px;
+  --e-6:   24px;
+  --e-7:   32px;
+  --margen-web:    20px;
+  --margen-panel:  18px;
+
+  /* --- Radios -----------------------------------------------------------
+     Casi todo a 3 px: el diseno imita papel impreso, no tarjetas de app. El
+     unico redondeo real son los avatares y el interruptor. */
+  --radio:        3px;
+  --radio-pildora: 999px;
+
+  /* --- Trazos ----------------------------------------------------------- */
+  --borde:        1px solid var(--linea);
+  --borde-campo:  1.5px solid var(--linea);
+
+  /* --- Sombras ----------------------------------------------------------
+     Calidas, nunca negro puro. */
+  --sombra-flotante: 0 10px 22px rgba(110, 20, 28, .4);
+  --sombra-hoja:     0 -8px 30px rgba(40, 15, 18, .28);
+  --velo:            rgba(40, 15, 18, .62);
+
+  /* --- La linea ondulada de cobre ---------------------------------------
+     Es la firma del menu navideno. Se usa como separador y CON MODERACION
+     (seccion 3 del encargo). Va como imagen de fondo repetida en horizontal
+     sobre una franja de 9 px de alto:
+         height: 9px;
+         background-image: var(--onda);
+         background-size: 40px 9px;
+     La variante --onda-clara es para cuando cae sobre banda granate. */
+  --onda:       url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='9'><path d='M0 5 q5 -4.5 10 0 t10 0 t10 0 t10 0' stroke='%23A8672F' fill='none' stroke-width='1.7' stroke-linecap='round'/></svg>");
+  --onda-clara: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='9'><path d='M0 5 q5 -4.5 10 0 t10 0 t10 0 t10 0' stroke='%23E7C79A' fill='none' stroke-width='1.7' stroke-linecap='round'/></svg>");
+
+  /* --- Degradados de cabecera ------------------------------------------- */
+  --grad-portada: linear-gradient(165deg, #A3272F, #93202A 45%, #6E141C);
+  --grad-banda:   linear-gradient(165deg, #A3272F, #8C1E27);
+  --grad-foto:    linear-gradient(150deg, #B0303A, #93202A 55%, #6E141C);
+
+  /* --- Medidas ----------------------------------------------------------
+     Se disena a 390 px primero. En escritorio, una columna centrada de 720 px
+     como maximo: no hay un segundo layout (seccion 3). */
+  --ancho-max:   720px;
+  --toque-min:   44px;   /* area tactil minima accesible */
+  --alto-nav:    64px;   /* barra inferior del panel */
+
+  /* --- Movimiento -------------------------------------------------------- */
+  --transicion: 160ms ease;
+}
+
+/* Quien pide menos movimiento, no lo tiene. Seccion 6, accesibilidad. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --transicion: 0ms; }
+}

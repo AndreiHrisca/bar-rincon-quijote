@@ -1,0 +1,115 @@
+# ---------------------------------------------------------------------------
+# El Rincon del Quijote — carta digital, reservas, personal y almacen
+# ---------------------------------------------------------------------------
+#   docker compose up -d      levanta todo
+#   docker compose logs -f    ver que pasa
+#
+# En un servidor limpio, donde este proyecto sea lo unico que corre, anade la
+# superposicion que le da a Caddy los puertos 80/443 y TLS automatico:
+#   docker compose -f docker-compose.yml -f deploy/standalone/compose.yml up -d
+# ---------------------------------------------------------------------------
+
+services:
+
+  # --- Base de datos, autenticacion y API ---------------------------------
+  pocketbase:
+    build:
+      context: .
+      dockerfile: deploy/pocketbase.Dockerfile
+      args:
+        PB_VERSION: "0.40.1"
+    image: quijote-pocketbase:0.40.1
+    container_name: quijote-pocketbase
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Madrid
+      # Freno antibot de las reservas: reservas por hora y por IP. Se cuenta por
+      # IP, y una IP no es una persona (oficinas, hoteles, wifi publico), asi
+      # que conviene holgura. Vacio = 12, el valor por defecto del codigo.
+      QUIJOTE_MAX_RESERVAS_IP: "${QUIJOTE_MAX_RESERVAS_IP:-12}"
+      # Canal de avisos (seccion 10 del encargo): "registro" escribe en el
+      # diario del servidor y es el unico que funciona en la v1. "sms" y
+      # "whatsapp" estan definidos y NO envian: no hay pasarela contratada ni
+      # nadie ha dicho quien paga los mensajes. Ver docs/README.md.
+      QUIJOTE_AVISOS: "${QUIJOTE_AVISOS:-registro}"
+    volumes:
+      # Unico volumen con estado: base SQLite y ficheros subidos (fotos de
+      # plato). Es lo que hay que respaldar; de ello se encarga "copias".
+      - pb_data:/pb/pb_data
+      # Hooks y migraciones vienen del repositorio: se despliegan con un
+      # "git pull && docker compose restart pocketbase", sin reconstruir nada.
+      - ./pb_hooks:/pb/pb_hooks:ro
+      - ./pb_migrations:/pb/pb_migrations:ro
+      # Las semillas se montan para poder lanzar los importadores de CSV desde
+      # dentro del contenedor:
+      #   docker exec quijote-pocketbase pocketbase importar-carta seed/carta.csv
+      - ./seed:/pb/seed:ro
+      # Registro de errores a fichero con rotacion (seccion 14). PocketBase
+      # escribe su log dentro de pb_data; este directorio es para los hooks.
+      - ./deploy/logs:/pb/logs
+    networks:
+      - interna
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # --- Servidor web -------------------------------------------------------
+  # No publica puertos: cuelga de la red "edge" y el proxy central del servidor
+  # le pasa barrinconquijote.es ya con TLS resuelto. Ver DECISIONES.md D-02.
+  web:
+    image: caddy:2-alpine
+    container_name: quijote-web
+    restart: unless-stopped
+    depends_on:
+      - pocketbase
+    environment:
+      TZ: Europe/Madrid
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+      - ./panel:/srv/panel:ro
+      - ./compartido:/srv/compartido:ro
+    networks:
+      - interna
+      - edge
+
+  # --- Copia de seguridad diaria ------------------------------------------
+  # Un contenedor con cron, no un cron del host: se levanta y se va con el
+  # resto del stack y no deja rastro en el servidor. Guarda base y ficheros
+  # subidos, y rota a 14 dias (seccion 4).
+  copias:
+    build:
+      context: ./deploy
+      dockerfile: backup.Dockerfile
+    image: quijote-copias:1
+    container_name: quijote-copias
+    restart: unless-stopped
+    # Como el usuario del host, no como root: si no, los .tar.gz caen en
+    # ./backups/ con propietario root y hacen falta permisos de administrador
+    # para consultarlos o borrarlos.
+    user: "1000:1000"
+    environment:
+      TZ: Europe/Madrid
+      DIAS_RETENCION: "14"
+      HORA_COPIA: "04:30"
+    volumes:
+      - pb_data:/origen/pb_data:ro
+      - ./backups:/destino
+    networks:
+      - interna
+
+volumes:
+  pb_data:
+
+networks:
+  # Red privada del stack: PocketBase solo es alcanzable desde aqui.
+  interna:
+    driver: bridge
+  # Red compartida del proxy central del servidor. Ya existe; no la crea este
+  # compose. En un servidor limpio se usa la superposicion de deploy/standalone,
+  # que prescinde de ella.
+  edge:
+    external: true

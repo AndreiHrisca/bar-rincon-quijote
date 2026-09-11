@@ -1,0 +1,114 @@
+# ---------------------------------------------------------------------------
+# Caddy interno — El Rincon del Quijote
+# ---------------------------------------------------------------------------
+# Este Caddy NO termina TLS ni publica puertos al host. Escucha en el 8080 de la
+# red interna y el proxy central del servidor (~/stacks/webs/_proxy) le pasa el
+# trafico ya descifrado de barrinconquijote.es.
+#
+# Motivo: este host ya tiene un Caddy en los puertos 80/443 sirviendo una docena
+# de dominios. Levantar un segundo Caddy que los reclame tumbaria todos. Ver
+# DECISIONES.md, decision D-02.
+#
+# Para un servidor limpio, donde este proyecto es lo unico que corre, usa
+# deploy/standalone/Caddyfile: ahi si hay TLS automatico y redireccion de www.
+# ---------------------------------------------------------------------------
+
+{
+	admin off
+	# El proxy de delante ya escribe su propio log de acceso por sitio.
+	log {
+		output stderr
+		format console
+		level INFO
+	}
+}
+
+:8080 {
+	# --- Cabeceras comunes ------------------------------------------------
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# --- PocketBase -------------------------------------------------------
+	# /api/*  API REST y tiempo real (SSE).
+	# /_/*    interfaz de administracion de PocketBase.
+	@pocketbase path /api/* /_/* /_
+	handle @pocketbase {
+		reverse_proxy pocketbase:8090 {
+			# El canal de tiempo real de PocketBase va por SSE: con buffer las
+			# respuestas se quedan colgadas y el interruptor de disponibilidad
+			# de la carta no se refleja al instante.
+			flush_interval -1
+		}
+	}
+
+	# --- Recursos compartidos por las dos aplicaciones --------------------
+	# Tipografias, tokens y logo. Se sirven con cache larga porque el nombre del
+	# fichero cambia si cambia el contenido (las fuentes) o porque el fichero
+	# es diminuto (tokens, logo).
+	#
+	# LOS TRES MATCHERS SON EXCLUYENTES ENTRE SI, Y NO ES ADORNO. Caddy no aplica
+	# varias directivas `header` en el orden en que estan escritas: una `header`
+	# sin matcher se aplica DESPUES de las que si lo tienen y las pisa. Estaba
+	# pasando ya: las fuentes salian con max-age=2592000 en vez del año inmutable
+	# que dice su bloque. Con `not path` no hay dos reglas peleandose por la
+	# misma cabecera.
+	handle_path /compartido/* {
+		root * /srv/compartido
+		@fuentes path *.woff2
+		@modulos path *.js
+		@resto not path *.woff2 *.js
+
+		# Tokens, logo: diminutos y estables.
+		header @resto Cache-Control "public, max-age=2592000"
+
+		# Fuentes: el nombre del fichero cambia si cambia el contenido.
+		header @fuentes {
+			Cache-Control "public, max-age=31536000, immutable"
+			Access-Control-Allow-Origin "*"
+		}
+
+		# Los modulos compartidos NO se cachean un mes. Aqui vive el precio del
+		# ingrediente extra (compartido/js/extras.js), y un cambio de precio que
+		# tardara treinta dias en llegar a los moviles seria una carta que miente.
+		# Misma politica que el resto del codigo del proyecto.
+		header @modulos Cache-Control "no-cache"
+
+		file_server
+	}
+
+	# --- Panel de gestion (PWA) -------------------------------------------
+	handle_path /panel* {
+		root * /srv/panel
+		header {
+			# El panel no se indexa nunca.
+			X-Robots-Tag "noindex, nofollow"
+			Cache-Control "no-cache"
+		}
+		# El service worker tiene que poder gobernar todo /panel.
+		@sw path /sw.js
+		header @sw Service-Worker-Allowed "/panel/"
+		# Go no conoce la extension .webmanifest y lo serviria como binario;
+		# entonces el navegador descarta el manifiesto y el panel deja de ser
+		# instalable, sin decir por que.
+		@manifiesto path /manifest.webmanifest
+		header @manifiesto Content-Type "application/manifest+json; charset=utf-8"
+		# Aplicacion de una sola pagina: lo que no sea un fichero, al index.
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+
+	# --- Carta publica y reservas -----------------------------------------
+	handle {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		@estaticos path *.css *.js *.svg *.png *.jpg *.webp *.woff2
+		header @estaticos Cache-Control "public, max-age=604800"
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+
+	encode zstd gzip
+}

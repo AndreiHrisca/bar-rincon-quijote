@@ -1,0 +1,94 @@
+/* ---------------------------------------------------------------------------
+   Tipografias autoalojadas — El Rincon del Quijote
+   ---------------------------------------------------------------------------
+   Las tres familias de la carta impresa, servidas desde nuestro dominio. No hay
+   ni una peticion a Google: lo exige la seccion 4 del encargo (sin CDNs) y la
+   12 (sin Google Fonts remotas), y es lo que permite prometer en la politica de
+   privacidad que la web no filtra trafico a terceros.
+
+   Los ficheros salen de scripts/subset-fuentes.sh, recortados a castellano +
+   ingles. No los edites a mano: regeneralos con ese script.
+
+   font-display: swap — el texto se pinta ya con la fuente del sistema y salta a
+   la definitiva al cargar. En 3G lenta, que es el caso de uso real (movil en la
+   terraza), preferimos texto feo al instante que texto invisible.
+--------------------------------------------------------------------------- */
+
+/* --- Alegreya SC: la versalita de la carta impresa.
+       Nombres de plato, rotulos de seccion, etiquetas y botones. --- */
+@font-face {
+  font-family: 'Alegreya SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('alegreya-sc-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Alegreya SC';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('alegreya-sc-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Alegreya SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('alegreya-sc-700.woff2') format('woff2');
+}
+
+/* --- Alegreya Sans: todo el texto de interfaz y las descripciones. --- */
+@font-face {
+  font-family: 'Alegreya Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('alegreya-sans-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Alegreya Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('alegreya-sans-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Alegreya Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('alegreya-sans-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Alegreya Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('alegreya-sans-800.woff2') format('woff2');
+}
+
+/* --- Cormorant Garamond: el nombre del bar y las cifras grandes.
+       Es la del menu navideno.
+
+       Ojo: es una fuente VARIABLE con eje de peso 300-700. Google sirve un
+       unico fichero por estilo y el navegador interpola el peso. De ahi el
+       rango "300 700" en font-weight: si se declara un peso suelto, el
+       navegador se queda en el peso por defecto (300) y las cifras grandes
+       salen mas finas de lo que pide la maqueta. --- */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('cormorant-garamond.woff2') format('woff2-variations'),
+       url('cormorant-garamond.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('cormorant-garamond-italica.woff2') format('woff2-variations'),
+       url('cormorant-garamond-italica.woff2') format('woff2');
+}

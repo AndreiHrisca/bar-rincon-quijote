@@ -1,0 +1,1189 @@
+/* ---------------------------------------------------------------------------
+   Carta publica — El Rincon del Quijote
+   ---------------------------------------------------------------------------
+   Componentes de las pantallas publicas. Todos los valores salen de
+   design/rincon-cliente.html, que es la fuente de verdad del diseno: los
+   decimales raros (13.5px, 15.5px) son los de la maqueta y cambiarlos descuadra
+   las columnas de precio.
+
+   Los colores vienen SIEMPRE de compartido/css/tokens.css. Aqui no hay ni un
+   hexadecimal suelto.
+--------------------------------------------------------------------------- */
+
+body {
+  background: var(--crema);
+  /* La barra inferior es fija; se reserva su hueco para que el ultimo plato de
+     la carta no quede debajo. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+#app {
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin-inline: auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--crema);
+}
+
+/* ==========================================================================
+   PORTADA
+   ========================================================================== */
+
+.portada {
+  background: var(--grad-portada);
+  color: var(--crema);
+  padding: 22px 26px 30px;
+  text-align: center;
+  position: relative;
+}
+/* La onda de cobre cierra la cabecera por abajo. */
+.portada::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 9px;
+  background-image: var(--onda-clara);
+  background-size: 40px 9px;
+  opacity: .85;
+}
+
+.portada__logo { width: 150px; margin: 0 auto 6px; }
+
+.portada__marca {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: var(--t-4xl);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.portada__lema {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-m);
+  letter-spacing: var(--track-lema);
+  margin-top: var(--e-2);
+  color: #F0D4A6;
+}
+
+/* Pastilla de "abierto / cerrado". El punto verde solo aparece si esta
+   abierto; si no, se pinta apagado. */
+.portada__estado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e-2);
+  margin-top: 18px;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .3);
+  padding: 7px 15px;
+  border-radius: var(--radio);
+  font-size: var(--t-m);
+  font-weight: 600;
+}
+.portada__punto {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #7FCB77;
+  flex: none;
+}
+.portada__punto--cerrado { background: rgba(251, 243, 227, .45); }
+
+/* --- Botonera principal --- */
+.acciones {
+  padding: 22px 22px 4px;
+  display: grid;
+  gap: 11px;
+}
+
+.btn {
+  display: block;
+  text-align: center;
+  padding: var(--e-4);
+  border-radius: var(--radio);
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  min-height: var(--toque-min);
+  transition: background var(--transicion), color var(--transicion);
+}
+.btn--primario { background: var(--granate); color: var(--crema); }
+.btn--linea {
+  background: var(--blanco);
+  color: var(--granate);
+  border: 1.5px solid rgba(147, 32, 42, .35);
+}
+.btn--primario:active { background: var(--granate-osc); }
+.btn--linea:active { background: var(--crema-2); }
+
+.separador-onda { margin: var(--e-5) 40px var(--e-1); }
+
+/* --- Filas de informacion --- */
+.info { padding: var(--e-2) 22px 0; }
+
+.info__fila {
+  display: flex;
+  gap: 14px;
+  padding: 15px 2px;
+  border-bottom: var(--borde);
+  align-items: flex-start;
+}
+.info__fila:last-child { border-bottom: none; }
+
+/* --- Iconos ----------------------------------------------------------------
+   El mismo juego que el panel (compartido/js/iconos.js). Una sola clase manda
+   el tamano y el color se hereda del texto. */
+.ic {
+  width: 20px;
+  height: 20px;
+  /* inline-block y no block: dentro de un flex da igual —se convierte en
+     block—, pero al lado de un texto corrido el block lo tiraba a la linea de
+     abajo. Paso con la flecha de «Ver lo que se cuece» de la portada. */
+  display: inline-block;
+  vertical-align: middle;
+  flex: none;
+}
+.ic--atras { transform: rotate(180deg); }
+/* La flecha del enlace destacado va pegada al texto y algo mas pequena. */
+.destacado__ic { width: 16px; height: 16px; margin-left: 4px; }
+
+.info__icono {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--granate);
+  margin-top: 1px;
+}
+.info__clave {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-4);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.info__valor {
+  font-size: var(--t-m);
+  color: var(--apagado);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+/* El telefono es un enlace real: se toca y llama. */
+.info__valor a { color: var(--granate); font-weight: 700; }
+
+/* --- Bloque destacado (celebraciones) --- */
+.destacado {
+  margin: 14px 22px 26px;
+  background: var(--blanco);
+  border: var(--borde);
+  border-left: 5px solid var(--granate);
+  padding: var(--e-4) 18px;
+}
+.destacado__rotulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-sm);
+  color: var(--granate);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.destacado__titulo {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: 24px;
+  margin: var(--e-1) 0 5px;
+  font-weight: 600;
+}
+.destacado__texto {
+  font-size: var(--t-m);
+  color: var(--apagado);
+  line-height: 1.55;
+}
+
+/* ==========================================================================
+   BARRA SUPERIOR (carta y demas pantallas internas)
+   ========================================================================== */
+
+.topbar {
+  background: var(--granate);
+  color: var(--crema);
+  padding: 10px 18px 12px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar__titulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-xl);
+  font-weight: 700;
+  flex: 1;
+  letter-spacing: var(--track-rotulo);
+}
+.topbar__boton {
+  width: 38px; height: 38px;
+  border-radius: var(--radio);
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--t-l);
+  flex: none;
+  font-weight: 700;
+  color: var(--crema);
+}
+/* El area tactil real es de 44px aunque el cuadro se vea de 38: se agranda por
+   fuera con un pseudoelemento para no romper la maqueta. */
+.topbar__boton::before {
+  content: "";
+  position: absolute;
+  width: var(--toque-min);
+  height: var(--toque-min);
+}
+.topbar__boton { position: relative; }
+
+/* ==========================================================================
+   CARTA
+   ========================================================================== */
+
+.carta { flex: 1; display: flex; flex-direction: column; }
+
+/* Buscador y categorias van pegados arriba: en una carta larga son lo que
+   permite no perderse. */
+.carta__filtros {
+  position: sticky;
+  top: 60px;
+  z-index: 15;
+  background: var(--crema);
+  flex: none;
+}
+
+.buscador {
+  margin: 14px var(--margen-web) 2px;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  padding: 12px 14px;
+  display: flex;
+  gap: var(--e-3);
+  align-items: center;
+  border-radius: var(--radio);
+}
+.buscador__icono { color: var(--tenue); flex: none; }
+.buscador__campo {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: var(--t-base);
+  min-width: 0;
+}
+.buscador__campo::placeholder { color: var(--tenue); }
+.buscador__limpiar {
+  color: var(--apagado);
+  font-size: 19px;
+  padding: 0 var(--e-1);
+  flex: none;
+  line-height: 1;
+}
+
+/* Carrusel horizontal de categorias. */
+.chips {
+  display: flex;
+  gap: var(--e-2);
+  padding: 14px var(--margen-web) 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.chips::-webkit-scrollbar { height: 0; }
+
+.chip {
+  flex: none;
+  padding: var(--e-2) 15px;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: var(--radio);
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-base);
+  font-weight: 500;
+  color: #6C5B4E;
+  white-space: nowrap;
+  letter-spacing: var(--track-rotulo);
+  min-height: var(--toque-min);
+  display: flex;
+  align-items: center;
+}
+.chip[aria-selected="true"] {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+
+.carta__lista { flex: 1; }
+
+/* --- Rotulo de seccion: el cachet blanco de la carta impresa --- */
+.seccion__banda {
+  background: var(--grad-banda);
+  padding: 11px 0 12px;
+  margin: 18px 0 0;
+  position: relative;
+}
+.seccion__cartel {
+  background: var(--blanco);
+  display: inline-block;
+  padding: 5px 22px 4px;
+  margin-left: var(--e-4);
+  font-family: var(--letra-rotulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--granate-osc);
+  letter-spacing: var(--track-cartel);
+}
+
+/* --- Cabecera de las dos columnas de precio --- */
+.cab-precios {
+  display: flex;
+  justify-content: flex-end;
+  /* El mismo hueco que separa las dos columnas de precio en la linea del plato
+     (.plato usa var(--e-3)). Con 14 px los rotulos caian 2 px a la izquierda de
+     sus numeros. */
+  gap: var(--e-3);
+  padding: var(--e-2) var(--margen-web) 0;
+}
+/* «Terraza / Salón» no cabe de una linea en 54 px, asi que el rotulo baja a
+   var(--t-xs) y se parte en dos. Se baja el cuerpo en vez de ensanchar la
+   columna porque cada pixel que se le quita a la columna del nombre es una
+   linea mas de plato partido en tres (misma razon que en el panel). */
+.cab-precios span {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-xs);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--apagado);
+  letter-spacing: var(--track-lema);
+  width: 54px;
+  text-align: right;
+  border-bottom: var(--borde);
+  padding-bottom: 2px;
+}
+
+/* --- Plato --- */
+.lista { padding: 0 var(--margen-web); }
+
+.plato {
+  display: flex;
+  gap: var(--e-3);
+  padding: 13px 0;
+  border-bottom: var(--borde);
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  min-height: var(--toque-min);
+}
+.plato:last-child { border-bottom: none; }
+.plato:active { background: var(--crema-2); }
+
+.plato__txt { flex: 1; min-width: 0; }
+
+/* --- Miniatura de la linea ---
+   48 px: por encima ya se come el ancho del nombre, que es lo que de verdad se
+   lee, y por debajo no se distingue un plato de otro. Cuadrada y con el mismo
+   radio de 3 px que el resto: la carta imita papel impreso, no tarjetas. */
+.plato__foto {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radio);
+  background: var(--neutro-bg);
+  /* La foto es lo unico rectangular de la carta; el filete la asienta sobre la
+     crema y le da el mismo borde al hueco vacio. */
+  border: 1px solid var(--linea);
+}
+/* Aqui SI se recorta, y a proposito: en un cuadrado de 48 px lo que importa es
+   reconocer el plato de un vistazo, no ver la foto entera. Sin recortar, una
+   foto apaisada se quedaria en una franja de 20 px. La foto completa esta a un
+   toque, en la ficha, que es donde se mira de verdad. */
+.plato__foto img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Sin foto: la inicial, en neutro. El granate de la ficha aqui seria un grito
+   repetido noventa veces. */
+.plato__inicial {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--tenue);
+}
+
+/* El plato es un <button>, que no admite <div> dentro sin ensuciar el marcado,
+   asi que los tres bloques son <span> y se apilan con display:block. Sin esto
+   el nombre y la descripcion salen pegados en la misma linea. */
+.plato__nombre,
+.plato__desc { display: block; }
+
+.plato__nombre {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-l);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: .02em;
+}
+.plato__desc {
+  font-size: 13px;
+  color: var(--apagado);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.plato__precio {
+  font-size: var(--t-base);
+  font-weight: 700;
+  width: 54px;
+  text-align: right;
+  flex: none;
+  color: var(--tinta);
+  font-variant-numeric: tabular-nums;
+}
+.plato__precio--terraza { color: var(--granate); }
+
+/* Cuando un plato no tiene precio de terraza se muestra un unico precio, y se
+   ensancha para ocupar las dos columnas sin descuadrar la rejilla. */
+.plato__precio--unico { width: 122px; }
+
+.tags { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+/* Dentro del boton del plato, .tags tambien es un <span>. */
+span.tags { display: flex; }
+.tag {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  padding: 3px var(--e-2);
+  background: var(--neutro-bg);
+  color: var(--neutro-tinta);
+  letter-spacing: .02em;
+  border-radius: 2px;
+}
+
+/* El aviso del ingrediente extra. Se distingue de las etiquetas de alergeno
+   —que son neutras— porque no dice lo que LLEVA el plato, sino lo que se le
+   puede anadir y lo que cuesta. Usa el par de aviso de los tokens: 5,2:1 sobre
+   su propio fondo y 5,4:1 sobre la crema, por encima del 4,5:1 de WCAG AA. El
+   cobre, que era el candidato natural, se queda en 4,1:1 y no valia. */
+.tag--extra {
+  background: var(--aviso-bg);
+  color: var(--aviso);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Barra inferior fija ---
+   Va FIJA al hueco visible, no pegada al final del documento: en una carta de
+   dos metros de largo, "Reservar mesa" tiene que estar siempre a un pulgar de
+   distancia. Se centra en la misma columna de 720 px que el resto. */
+.barra-baja {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: var(--ancho-max);
+  padding: 14px var(--margen-web) calc(20px + env(safe-area-inset-bottom));
+  background: var(--crema);
+  border-top: var(--borde);
+  z-index: 15;
+}
+
+/* Al ser fija, deja de ocupar sitio: se reserva su hueco para que el ultimo
+   plato de la carta no quede tapado. */
+.carta__lista { padding-bottom: 96px; }
+
+/* --- Estados vacios --- */
+.vacio {
+  padding: 48px var(--e-6);
+  text-align: center;
+  color: var(--apagado);
+}
+.vacio__titulo {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: 24px;
+  color: var(--granate-osc);
+  margin-bottom: var(--e-2);
+}
+.vacio__texto { font-size: var(--t-m); line-height: 1.6; }
+
+/* ==========================================================================
+   FICHA DE PLATO (hoja inferior)
+   ========================================================================== */
+
+.velo {
+  position: fixed;
+  inset: 0;
+  background: var(--velo);
+  z-index: 40;
+  animation: aparecer var(--transicion) ease;
+}
+@keyframes aparecer { from { opacity: 0 } to { opacity: 1 } }
+
+.hoja {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: var(--ancho-max);
+  z-index: 41;
+  background: var(--crema);
+  border-top: 5px solid var(--granate);
+  padding: var(--e-3) var(--e-6) calc(30px + env(safe-area-inset-bottom));
+  max-height: 88dvh;
+  overflow-y: auto;
+  box-shadow: var(--sombra-hoja);
+  animation: subir 220ms cubic-bezier(.2, .8, .3, 1);
+}
+@keyframes subir {
+  from { transform: translate(-50%, 100%) }
+  to   { transform: translate(-50%, 0) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hoja, .velo { animation: none; }
+}
+
+.hoja__asa {
+  width: 46px; height: 4px;
+  border-radius: 2px;
+  background: #D6C6AC;
+  margin: 0 auto 14px;
+}
+
+/* Sin foto cae al bloque granate con la inicial, como en la maqueta.
+   Con foto, la que manda es la foto: ver ilustracion() en vistas/ficha.js. */
+.hoja__foto {
+  min-height: 190px;
+  max-height: 52dvh;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+  background: var(--grad-foto);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--granate-osc);
+}
+/* Con imagen se quita el minimo: una foto apaisada se queda en su alto, sin
+   franjas de degradado arriba y abajo que parecerian un fallo de carga. */
+.hoja__foto--con-imagen { min-height: 0; }
+
+/* `contain` y no `cover`: la foto entera, sin recortar. `height:auto` deja que
+   sea la proporcion real la que decida el alto; el max-height solo entra a
+   frenar las verticales, y ahi el degradado hace de marco. */
+.hoja__foto img {
+  width: 100%;
+  height: auto;
+  max-height: 52dvh;
+  object-fit: contain;
+}
+/* dvh no lo entienden los navegadores mas viejos; vh es la red de seguridad. */
+@supports not (height: 1dvh) {
+  .hoja__foto { max-height: 52vh; }
+  .hoja__foto img { max-height: 52vh; }
+}
+.hoja__inicial {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: 64px;
+  color: rgba(251, 243, 227, .5);
+}
+
+.hoja__titulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .02em;
+}
+
+/* Los dos precios, grandes y sin letra pequena. */
+.precios-grandes { display: flex; gap: 26px; margin-top: var(--e-3); }
+.precios-grandes__rotulo {
+  font-family: var(--letra-rotulo);
+  font-size: 12.5px;
+  color: var(--apagado);
+  letter-spacing: .07em;
+  font-weight: 700;
+}
+.precios-grandes__valor {
+  font-size: 23px;
+  font-weight: 800;
+  color: var(--granate);
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* En la ficha el aviso del extra no es una etiqueta: va bajo los precios
+   grandes y se lee de corrido, porque es ahi donde el cliente decide. */
+.hoja__extra {
+  margin-top: 9px;
+  font-size: var(--t-m);
+  font-weight: 700;
+  color: var(--aviso);
+  font-variant-numeric: tabular-nums;
+}
+
+.hoja__desc {
+  font-size: var(--t-base);
+  color: var(--apagado-2);
+  line-height: 1.65;
+  margin-top: 14px;
+}
+
+.hoja__alergenos {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: var(--borde);
+}
+.hoja__alergenos-rotulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-m);
+  font-weight: 700;
+  margin-bottom: 9px;
+  letter-spacing: .04em;
+}
+
+.hoja__cerrar {
+  margin-top: var(--e-6);
+  width: 100%;
+  text-align: center;
+  padding: var(--e-3);
+  font-family: var(--letra-rotulo);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--granate);
+  letter-spacing: var(--track-rotulo);
+  min-height: var(--toque-min);
+}
+
+/* ==========================================================================
+   AVISO DE SIN CONEXION
+   ========================================================================== */
+/* La carta se guarda en el movil, asi que si se cae la red se sigue viendo. Se
+   avisa, pero sin alarmar: el cliente esta mirando que cenar, no depurando. */
+.sin-conexion {
+  background: var(--aviso-bg);
+  border-bottom: 1px solid var(--aviso-linea);
+  color: #6A4A11;
+  font-size: 13px;
+  padding: var(--e-2) var(--margen-web);
+  text-align: center;
+}
+
+/* ==========================================================================
+   RESERVA
+   ========================================================================== */
+
+.reserva { flex: 1; padding-bottom: 96px; }
+
+.campo { padding: 0 var(--margen-web); margin-top: var(--e-5); }
+.campo__etiqueta {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-base);
+  font-weight: 700;
+  margin-bottom: 9px;
+  display: block;
+  letter-spacing: var(--track-rotulo);
+}
+
+.input {
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: var(--radio);
+  padding: 14px 15px;
+  font-size: var(--t-base);
+  width: 100%;
+  min-height: var(--toque-min);
+}
+.input::placeholder { color: var(--tenue); }
+textarea.input { min-height: 80px; resize: vertical; }
+/* Un campo con error se marca con borde y con texto: nunca solo con color. */
+.input[aria-invalid="true"] { border-color: var(--granate); border-width: 2px; }
+
+.error-campo {
+  color: var(--granate);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+/* --- Selector de día --- */
+.dias {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding-bottom: var(--e-1);
+  scrollbar-width: none;
+}
+.dias::-webkit-scrollbar { height: 0; }
+
+.dia {
+  flex: none;
+  width: 60px;
+  padding: 10px 0;
+  text-align: center;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: var(--radio);
+  min-height: var(--toque-min);
+}
+.dia__nombre { font-size: 12.5px; color: var(--apagado); font-weight: 700; display: block; }
+.dia__numero {
+  font-family: var(--letra-titulo);
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 1px;
+  display: block;
+}
+.dia[aria-pressed="true"] {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+.dia[aria-pressed="true"] .dia__nombre { color: rgba(251, 243, 227, .78); }
+
+/* --- Rejilla de horas --- */
+.horas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+
+.hora {
+  padding: 12px 0;
+  text-align: center;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: var(--radio);
+  font-size: var(--t-base);
+  font-weight: 600;
+  min-height: var(--toque-min);
+  font-variant-numeric: tabular-nums;
+}
+.hora[aria-pressed="true"] {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+/* Las franjas sin sitio se TACHAN, no se ocultan: un hueco tachado dice "aquí
+   no cabéis"; uno que desaparece no dice nada. */
+.hora:disabled {
+  color: var(--arrastre);
+  background: #F3EBDA;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.horas__servicio {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-sm);
+  color: var(--apagado);
+  font-weight: 700;
+  letter-spacing: var(--track-cartel);
+  margin: var(--e-3) 0 var(--e-2);
+}
+.horas__servicio:first-child { margin-top: 0; }
+
+/* --- Contador de comensales --- */
+.contador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: var(--radio);
+  padding: 9px var(--e-3);
+}
+.contador__boton {
+  width: var(--toque-min);
+  height: var(--toque-min);
+  background: var(--neutro-bg);
+  color: var(--granate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  font-weight: 800;
+  border-radius: var(--radio);
+}
+.contador__boton:disabled { color: var(--arrastre); }
+.contador__valor { font-family: var(--letra-titulo); font-size: var(--t-2xl); font-weight: 600; }
+.contador__valor small {
+  font-family: var(--letra-texto);
+  font-size: var(--t-sm);
+  color: var(--apagado);
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* --- Selectores de zona y motivo --- */
+.selector { display: flex; flex-wrap: wrap; gap: var(--e-2); }
+.sel {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-m);
+  padding: var(--e-2) 14px;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  border-radius: var(--radio);
+  color: #6C5B4E;
+  letter-spacing: var(--track-rotulo);
+  min-height: var(--toque-min);
+}
+.sel[aria-pressed="true"] {
+  background: var(--granate);
+  border-color: var(--granate);
+  color: var(--crema);
+}
+
+/* --- Consentimiento --- */
+/* SIN MARCAR por defecto (sección 12). El cuadro es un checkbox real, no un div
+   pintado: así funciona con teclado y con lector de pantalla. */
+.check {
+  display: flex;
+  gap: var(--e-3);
+  align-items: flex-start;
+  padding: 0 var(--margen-web);
+  margin-top: var(--e-5);
+}
+.check input {
+  width: 22px; height: 22px;
+  flex: none;
+  margin-top: 2px;
+  accent-color: var(--granate);
+}
+.check label { font-size: var(--t-m); line-height: 1.5; color: var(--apagado-2); }
+.check a { color: var(--granate); font-weight: 700; text-decoration: underline; }
+
+.nota-legal {
+  padding: var(--e-4) var(--margen-web) 0;
+  font-size: 13px;
+  color: var(--apagado);
+  line-height: 1.55;
+}
+.nota-legal a { color: var(--granate); font-weight: 700; }
+
+/* Campo trampa del antibot: invisible para las personas, presente para los
+   robots. Se esconde con position, no con display:none, porque algunos robots
+   ignoran los campos ocultos por display. */
+.trampa {
+  position: absolute;
+  left: -9999px;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+/* --- Aviso general del formulario --- */
+.aviso-form {
+  margin: var(--e-4) var(--margen-web) 0;
+  background: var(--aviso-bg);
+  border: 1px solid var(--aviso-linea);
+  border-radius: var(--radio);
+  padding: 13px 15px;
+  font-size: var(--t-m);
+  line-height: 1.5;
+  color: #6A4A11;
+}
+.aviso-form--error {
+  background: var(--error-bg);
+  border-color: rgba(147, 32, 42, .3);
+  color: var(--granate-osc);
+}
+.aviso-form a { color: var(--granate); font-weight: 700; }
+
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ==========================================================================
+   CONFIRMACIÓN
+   ========================================================================== */
+
+.exito { padding: 40px 26px 0; text-align: center; }
+
+/* El sello es grande a proposito: es lo unico que se mira al confirmar. */
+.sello__ic { width: 44px; height: 44px; }
+
+.sello {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  margin: 0 auto 22px;
+  background: var(--granate);
+  color: var(--crema);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 9px rgba(147, 32, 42, .12);
+}
+.exito h1 {
+  font-family: var(--letra-titulo);
+  font-style: italic;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--granate-osc);
+}
+.exito__texto {
+  font-size: var(--t-base);
+  color: var(--apagado);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.resumen {
+  margin: var(--e-6) 22px 0;
+  background: var(--blanco);
+  border: var(--borde);
+  overflow: hidden;
+}
+.resumen__fila {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--e-4);
+  padding: 14px 18px;
+  border-bottom: var(--borde);
+  font-size: var(--t-base);
+}
+.resumen__fila:last-child { border-bottom: none; }
+.resumen__clave { color: var(--apagado); }
+.resumen__valor { font-weight: 700; text-align: right; }
+
+/* La banda granate con el código cierra la tarjeta. Es lo que se enseña en la
+   puerta, así que va grande y en versalita. */
+.codigo {
+  background: var(--granate);
+  color: var(--crema);
+  padding: 15px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--e-3);
+}
+.codigo__rotulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-sm);
+  opacity: .85;
+  letter-spacing: var(--track-cartel);
+}
+.codigo__valor {
+  font-family: var(--letra-rotulo);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.acciones-confirmacion { padding: 22px; display: grid; gap: 11px; }
+.enlace-suave {
+  display: block;
+  text-align: center;
+  padding: var(--e-3);
+  font-size: var(--t-base);
+  color: var(--granate);
+  font-weight: 700;
+  min-height: var(--toque-min);
+}
+
+/* ==========================================================================
+   PIE CON LOS TEXTOS LEGALES
+   ==========================================================================
+   La maqueta no dibuja pie: las seis pantallas acaban en el borde. Este existe
+   porque la seccion 12 del encargo obliga a que el aviso legal, la privacidad y
+   las cookies se alcancen desde la web, y solo cabe en la portada (la carta y
+   la reserva terminan en una barra fija). Va en el gris mas tenue de la paleta
+   y separado por la linea de siempre: presente, pero sin pelear con nada. */
+
+.pie {
+  padding: var(--e-5) 22px 26px;
+  border-top: var(--borde);
+  text-align: center;
+}
+.pie__enlaces {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+.pie__enlaces a {
+  color: var(--apagado);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  /* Area tactil de 44 px sin abultar la linea: el relleno vertical la da. */
+  padding: 13px 0;
+  min-height: var(--toque-min);
+  display: inline-flex;
+  align-items: center;
+}
+.pie__nota {
+  margin-top: var(--e-1);
+  font-size: var(--t-s);
+  color: var(--tenue-2);
+  line-height: 1.5;
+}
+
+/* El bloque de celebraciones es ademas el enlace a los eventos (D-83). Es un
+   <a>, asi que hay que devolverle el color del texto y marcar que se puede
+   pulsar: la flecha de la ultima linea y el hundido al tocarlo. */
+.destacado--enlace { display: block; color: inherit; }
+.destacado--enlace:active { background: var(--crema-2); }
+.destacado__ir {
+  margin-top: var(--e-3);
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--track-rotulo);
+  color: var(--granate);
+}
+
+/* ==========================================================================
+   EVENTOS — «Qué se cuece»
+   ==========================================================================
+   Pantalla 6 de la maqueta del cliente. El taco de fecha (mes en versalita
+   granate sobre el numero en Cormorant) es suyo y no se usa en ningun otro
+   sitio. */
+
+.eventos { flex: 1; padding-bottom: 96px; }
+
+.evento {
+  display: flex;
+  gap: var(--e-4);
+  padding: 17px 0;
+  border-bottom: var(--borde);
+  align-items: flex-start;
+}
+.evento:last-child { border-bottom: none; }
+
+/* Los eventos pasados van atenuados, como en la maqueta. AHI ESTAN AL 42 % Y
+   AQUI AL 60 %: al 42 % el titulo queda en 2,6:1 sobre la crema, muy por debajo
+   del 4,5:1 que exige WCAG AA, y sigue siendo texto que alguien tiene que poder
+   leer. Al 60 % da 4,6:1 y se distingue igual de bien del que esta por venir.
+   Mismo criterio que con --apagado en D-17. */
+.evento--pasado { opacity: .6; }
+
+.fecha-b {
+  width: 62px;
+  flex: none;
+  background: var(--blanco);
+  border: var(--borde-campo);
+  text-align: center;
+  padding: 9px 0;
+}
+.fecha-b__mes {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-s);
+  font-weight: 700;
+  color: var(--granate);
+  letter-spacing: .1em;
+}
+.fecha-b__dia {
+  font-family: var(--letra-titulo);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.evento__txt { flex: 1; min-width: 0; }
+.evento__nombre {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-l);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: .02em;
+}
+.evento__cuando {
+  font-size: var(--t-sm);
+  color: var(--granate);
+  font-weight: 700;
+  margin-top: 3px;
+}
+.evento__desc {
+  font-size: var(--t-m);
+  color: var(--apagado);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* La foto, cuando la hay, con la misma medida y el mismo recorte que la de la
+   linea de la carta: es el componente que la maqueta ya usa para una lista con
+   imagen, y no se inventa otro. */
+.evento__foto {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: var(--radio);
+  background: var(--neutro-bg);
+  border: 1px solid var(--linea);
+}
+.evento__foto img { width: 100%; height: 100%; object-fit: cover; }
+
+.eventos__cargando {
+  padding: var(--e-7) 0;
+  text-align: center;
+  color: var(--tenue);
+  font-size: var(--t-m);
+}
+
+/* ==========================================================================
+   TEXTOS LEGALES
+   ==========================================================================
+   Tres pantallas de leer, no de tocar: medida de linea corta, interlineado
+   ancho y rotulos en el cachet de versalitas granate del resto de la carta. */
+
+.legal {
+  padding: var(--e-6) 22px var(--e-7);
+  max-width: 620px;
+  margin: 0 auto;
+}
+.legal__rotulo {
+  font-family: var(--letra-rotulo);
+  font-size: var(--t-ml);
+  font-weight: 700;
+  letter-spacing: var(--track-rotulo);
+  color: var(--granate);
+  margin: var(--e-6) 0 var(--e-2);
+}
+.legal__rotulo:first-child { margin-top: 0; }
+.legal__texto {
+  font-size: var(--t-base);
+  line-height: 1.65;
+  color: var(--apagado-2);
+  margin-bottom: var(--e-3);
+}
+.legal__lista {
+  list-style: none;
+  margin: 0 0 var(--e-3);
+  padding: 0;
+}
+.legal__lista li {
+  font-size: var(--t-base);
+  line-height: 1.65;
+  color: var(--apagado-2);
+  padding: 5px 0 5px var(--e-4);
+  position: relative;
+}
+.legal__lista li::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  color: var(--granate);
+  font-weight: 700;
+}
+.legal__otros {
+  padding: 0 22px var(--e-7);
+  display: grid;
+  gap: var(--e-1);
+  border-top: var(--borde);
+  margin: 0 22px;
+  padding-top: var(--e-4);
+}
+
+/* Hueco del ancho de un botón en la barra superior, para centrar el título en
+   las pantallas que no tienen botón a la derecha (los textos legales). No es un
+   botón vacío: eso dibuja un recuadro granate que invita a pulsarlo. */
+.topbar__hueco {
+  width: var(--toque-min);
+  height: var(--toque-min);
+  flex: none;
+}

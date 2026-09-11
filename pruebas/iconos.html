@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Juego de iconos — rejilla de repaso</title>
+<!--
+  REJILLA DE REPASO DEL JUEGO DE ICONOS, no una pantalla del proyecto.
+  ---------------------------------------------------------------------------
+  Ensena los 24 iconos sobre crema y sobre granate, al tamano de la barra
+  inferior (24 px), al de dentro del panel (20 px) y a 16 px, que es donde se
+  ve si alguno tiene demasiado detalle.
+
+      python3 -m http.server 8099
+      http://localhost:8099/pruebas/iconos.html
+-->
+<link rel="stylesheet" href="/compartido/fuentes/fuentes.css">
+<link rel="stylesheet" href="/compartido/css/tokens.css">
+<style>
+  * { box-sizing: border-box }
+  body { margin: 0; font-family: var(--letra-texto); background: var(--crema); }
+
+  .banda { padding: var(--e-6) var(--e-5); }
+  .banda--crema   { background: var(--crema);   color: var(--tinta); }
+  .banda--granate { background: var(--granate); color: var(--crema); }
+
+  h1, h2 {
+    font-family: var(--letra-rotulo); font-weight: 500; letter-spacing: var(--track-rotulo);
+    margin: 0 0 var(--e-5); font-size: 20px;
+  }
+  .pie { font-size: 13px; opacity: .75; margin: 0 0 var(--e-5); }
+
+  .rejilla {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: var(--e-5) var(--e-3);
+  }
+  .celda { text-align: center; }
+  .celda span { display: block; margin-top: var(--e-2); font-size: 11px; opacity: .8; }
+
+  /* La clase que gobierna el tamano en el proyecto. */
+  .ic { width: 20px; height: 20px; display: block; margin: 0 auto; }
+  .ic--nav { width: 24px; height: 24px; }
+  .ic--mini { width: 16px; height: 16px; }
+
+  /* Un icono sobre una pastilla granate, como en la barra superior. */
+  .tira { display: flex; gap: var(--e-4); flex-wrap: wrap; align-items: center; margin-top: var(--e-4); }
+  .pastilla-ic {
+    width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.14); border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<div id="sprite"></div>
+
+<section class="banda banda--crema">
+  <h1>Sobre crema · 24 px (barra inferior)</h1>
+  <p class="pie">Es el tamaño al que se ven los cinco de la navegación.</p>
+  <div class="rejilla" id="crema-24"></div>
+</section>
+
+<section class="banda banda--granate">
+  <h2>Sobre granate · 24 px</h2>
+  <p class="pie">Mismo dibujo, color heredado. No hay una segunda versión.</p>
+  <div class="rejilla" id="granate-24"></div>
+  <div class="tira" id="tira"></div>
+</section>
+
+<section class="banda banda--crema">
+  <h2>Sobre crema · 20 px (dentro del panel) y 16 px</h2>
+  <p class="pie">A 16 px se ve cuál tiene demasiado detalle. Es la prueba dura.</p>
+  <div class="rejilla" id="crema-20"></div>
+  <div class="rejilla" id="crema-16" style="margin-top:32px"></div>
+</section>
+
+<script type="module">
+import { sprite, icono, NOMBRES } from '/compartido/js/iconos.js'
+
+document.getElementById('sprite').append(sprite())
+
+function pintar(id, clase) {
+  const caja = document.getElementById(id)
+  for (const nombre of NOMBRES) {
+    const celda = document.createElement('div')
+    celda.className = 'celda'
+    celda.append(icono(nombre, { clase }))
+    const rotulo = document.createElement('span')
+    rotulo.textContent = nombre
+    celda.append(rotulo)
+    caja.append(celda)
+  }
+}
+
+pintar('crema-24', 'ic ic--nav')
+pintar('granate-24', 'ic ic--nav')
+pintar('crema-20', 'ic')
+pintar('crema-16', 'ic ic--mini')
+
+// Los que van dentro de un botón de la barra granate.
+const tira = document.getElementById('tira')
+for (const nombre of ['buscar', 'anadir', 'descargar', 'chevron', 'salir', 'editar']) {
+  const p = document.createElement('div')
+  p.className = 'pastilla-ic'
+  p.append(icono(nombre, { clase: 'ic' }))
+  tira.append(p)
+}
+</script>
+</body>
+</html>

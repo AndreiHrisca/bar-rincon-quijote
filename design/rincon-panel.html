@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Rincón del Quijote — panel de gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@400;500;700&family=Alegreya+Sans:wght@400;500;700;800&family=Cormorant+Garamond:ital,wght@0,500;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --granate:#93202A;
+  --granate-osc:#6E141C;
+  --crema:#FBF3E3;
+  --fondo:#F6EFE1;
+  --blanco:#FFFFFF;
+  --tinta:#241A16;
+  --apagado:#7E6F63;
+  --linea:#E5DAC5;
+  --cobre:#A8672F;
+  --ok:#3F6E3A;
+  --ok-bg:#E9F0E2;
+  --avi:#8A5A12;
+  --avi-bg:#FAEFD6;
+  --onda:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='9'><path d='M0 5 q5 -4.5 10 0 t10 0 t10 0 t10 0' stroke='%23A8672F' fill='none' stroke-width='1.7' stroke-linecap='round'/></svg>");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Alegreya Sans',system-ui,sans-serif;background:#C9B9A2;color:var(--tinta);padding:44px 24px 80px;-webkit-font-smoothing:antialiased}
+.deck-head{max-width:1200px;margin:0 auto 40px}
+.deck-head h1{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:36px;font-weight:600;color:#3A2018}
+.deck-head p{color:#4E4235;font-size:15.5px;margin-top:6px;max-width:64ch}
+.gallery{display:flex;flex-wrap:wrap;gap:52px 40px;justify-content:center;max-width:1400px;margin:0 auto}
+figure{margin:0;width:390px}
+figcaption{margin-top:14px;font-size:14px;color:#4A3E33;line-height:1.55}
+figcaption b{display:block;color:#2A1B14;font-size:15px;font-weight:800;margin-bottom:2px}
+
+.phone{width:390px;height:844px;border-radius:46px;background:var(--fondo);border:9px solid #17130F;
+  overflow:hidden;position:relative;box-shadow:0 26px 50px rgba(40,20,15,.35);display:flex;flex-direction:column}
+.status{height:46px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 5px;font-size:13px;font-weight:700}
+.status .sig{display:flex;gap:4px;align-items:center;opacity:.85}
+.status .bar{width:3px;background:currentColor;border-radius:1px}
+.status .bat{width:22px;height:11px;border:1.4px solid currentColor;border-radius:3px;position:relative;opacity:.85;margin-left:6px}
+.status .bat::after{content:"";position:absolute;inset:1.6px;right:6px;background:currentColor;border-radius:1px}
+.view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.scroll{flex:1;overflow-y:auto}
+.scroll::-webkit-scrollbar{width:0}
+
+.head{flex:none;background:var(--granate);color:var(--crema);padding:6px 18px 12px;display:flex;align-items:center;gap:12px}
+.head h2{font-family:'Alegreya SC',serif;font-size:22px;font-weight:700;flex:1;letter-spacing:.03em}
+.ib{width:38px;height:38px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;font-weight:700}
+.ib.clara{background:var(--crema);color:var(--granate);border-color:var(--crema)}
+
+.nav{flex:none;background:var(--blanco);border-top:1px solid var(--linea);display:flex;padding:9px 6px 24px}
+.nav div{flex:1;text-align:center;font-family:'Alegreya SC',serif;font-size:12.5px;font-weight:500;color:#A2917F;letter-spacing:.03em}
+.nav div .g{display:block;font-size:19px;margin-bottom:2px;line-height:1;font-family:'Alegreya Sans',sans-serif}
+.nav div.on{color:var(--granate);font-weight:700}
+
+.pad{padding:16px 18px 0}
+.card{background:var(--blanco);border:1px solid var(--linea)}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--linea)}
+.card-h h3{font-family:'Alegreya SC',serif;font-size:17px;font-weight:700;letter-spacing:.03em}
+.card-h a{font-size:14px;font-weight:700;color:var(--granate)}
+.rows > div{padding:14px 16px;border-bottom:1px solid var(--linea)}
+.rows > div:last-child{border-bottom:none}
+.seclbl{font-family:'Alegreya SC',serif;font-size:15px;font-weight:700;color:var(--apagado);letter-spacing:.05em;margin:20px 0 8px;padding:0 2px}
+
+.saludo{padding:16px 18px 2px}
+.saludo h1{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;font-weight:600;color:var(--granate-osc)}
+.saludo p{font-size:14.5px;color:var(--apagado);margin-top:2px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px 0}
+.tile{background:var(--blanco);border:1px solid var(--linea);padding:13px 12px}
+.tile .n{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;line-height:1}
+.tile .l{font-size:12.5px;color:var(--apagado);margin-top:5px;line-height:1.3;font-weight:600}
+.tile.acento{background:var(--granate);border-color:var(--granate);color:var(--crema)}
+.tile.acento .l{color:rgba(251,243,227,.78)}
+
+.aviso{margin:14px 18px 0;background:var(--avi-bg);border:1px solid #E9D3A6;padding:13px 15px;display:flex;gap:11px}
+.aviso .g{color:var(--avi);font-size:16px;flex:none}
+.aviso .t{font-size:14px;line-height:1.45;color:#6A4A11}
+.aviso .t b{display:block;font-weight:800;margin-bottom:2px;color:var(--avi)}
+
+.res{display:flex;gap:13px;align-items:flex-start}
+.res .hora{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;width:54px;flex:none}
+.res .nom{font-size:16px;font-weight:700}
+.res .met{font-size:13.5px;color:var(--apagado);margin-top:2px}
+.res .nota{font-size:13px;color:var(--granate);margin-top:4px;font-weight:700}
+.res .cuerpo{flex:1;min-width:0}
+.pill{font-family:'Alegreya SC',serif;font-size:12.5px;font-weight:700;padding:4px 9px;flex:none;white-space:nowrap;letter-spacing:.04em}
+.pill.conf{background:var(--ok-bg);color:var(--ok)}
+.pill.pend{background:var(--avi-bg);color:var(--avi)}
+.pill.sent{background:#F1E7D3;color:#7A6450}
+.pill.no{background:#F7E1E2;color:var(--granate)}
+
+.dias{display:flex;gap:8px;padding:14px 18px 2px;overflow-x:auto}
+.dias::-webkit-scrollbar{height:0}
+.dchip{flex:none;width:54px;text-align:center;padding:8px 0;background:var(--blanco);border:1px solid var(--linea)}
+.dchip .d{font-family:'Alegreya SC',serif;font-size:12.5px;font-weight:700;color:var(--apagado)}
+.dchip .n{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;line-height:1.1}
+.dchip.on{background:var(--granate);border-color:var(--granate);color:var(--crema)}
+.dchip.on .d{color:rgba(251,243,227,.75)}
+.dchip .pt{width:5px;height:5px;border-radius:50%;background:var(--cobre);margin:3px auto 0}
+
+.fab{position:absolute;right:20px;bottom:104px;background:var(--granate);color:var(--crema);
+  padding:15px 22px;font-family:'Alegreya SC',serif;font-size:16px;font-weight:700;letter-spacing:.03em;
+  box-shadow:0 10px 22px rgba(110,20,28,.4)}
+
+.item{display:flex;align-items:center;gap:12px}
+.item .arr{color:#CFC1AC;font-size:15px;flex:none}
+.item .cuerpo{flex:1;min-width:0}
+.item .nom{font-size:15.5px;font-weight:700}
+.item .sub{font-size:13px;color:var(--apagado);margin-top:2px}
+.sw{width:46px;height:27px;border-radius:999px;background:#DCCFB9;position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:var(--ok)}
+.sw.on::after{left:22px}
+.agot{opacity:.5}
+.grupo-h{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--granate);color:var(--crema)}
+.grupo-h .t{font-family:'Alegreya SC',serif;font-size:17px;font-weight:700;letter-spacing:.04em}
+.grupo-h .c{font-size:13px;opacity:.8;font-weight:600}
+.dosp{display:flex;gap:12px;flex:none;text-align:right}
+.dosp span{width:52px;font-size:14.5px;font-weight:700}
+.dosp span.t{color:var(--granate)}
+.cab-dosp{display:flex;justify-content:flex-end;gap:12px;padding:8px 16px 0;background:var(--blanco)}
+.cab-dosp span{font-family:'Alegreya SC',serif;font-size:12px;font-weight:700;color:var(--apagado);width:52px;text-align:right;letter-spacing:.05em}
+
+.campo{padding:0 18px;margin-top:18px}
+.campo .lbl{font-family:'Alegreya SC',serif;font-size:15px;font-weight:700;margin-bottom:8px;display:block;letter-spacing:.03em}
+.input{background:var(--blanco);border:1.5px solid var(--linea);padding:13px 14px;font-size:15.5px}
+.input.ph{color:#A9998A}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.tagsel{display:flex;flex-wrap:wrap;gap:8px}
+.tg{font-family:'Alegreya SC',serif;font-size:14.5px;padding:8px 13px;background:var(--blanco);border:1.5px solid var(--linea);color:#6C5B4E;letter-spacing:.03em}
+.tg.on{background:var(--granate);border-color:var(--granate);color:var(--crema)}
+.foto-up{margin:0 18px;height:118px;border:1.5px dashed #CDBFA8;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;color:var(--apagado);font-size:14px;background:var(--blanco)}
+.foto-up .g{font-size:24px;color:var(--granate)}
+.acciones{flex:none;padding:13px 18px 16px;background:var(--blanco);border-top:1px solid var(--linea);display:grid;gap:9px}
+.btn{display:block;text-align:center;padding:15px;font-family:'Alegreya SC',serif;font-size:17px;font-weight:700;letter-spacing:.04em}
+.btn-p{background:var(--granate);color:var(--crema)}
+.btn-l{background:var(--blanco);border:1.5px solid rgba(147,32,42,.35);color:var(--granate)}
+.btn-d{color:var(--granate);font-weight:700;font-size:15px;text-align:center;padding:8px}
+
+.dia-blq{padding:13px 16px;border-bottom:1px solid var(--linea)}
+.dia-blq .cab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.dia-blq .cab .d{font-family:'Alegreya SC',serif;font-size:16px;font-weight:700;letter-spacing:.03em}
+.dia-blq .cab .h{font-size:13px;color:var(--apagado);font-weight:600}
+.turno{display:flex;align-items:center;gap:11px;padding:7px 0}
+.av{width:32px;height:32px;border-radius:50%;background:var(--granate);color:var(--crema);display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:800;flex:none}
+.av.b{background:var(--cobre)}
+.av.c{background:#6B6B33}
+.turno .n{font-size:15px;font-weight:700;flex:1}
+.turno .r{font-size:14px;color:var(--apagado);font-weight:600}
+.vacio{font-size:14px;color:var(--granate);font-weight:700;padding:7px 0}
+
+.fich{display:flex;align-items:center;gap:12px}
+.fich .n{font-size:15.5px;font-weight:700;flex:1}
+.fich .t{font-size:14px;color:var(--apagado);font-weight:600;text-align:right}
+.fich .t b{color:var(--tinta);display:block;font-size:15px;font-weight:800}
+.enturno{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+
+.graf{display:flex;align-items:flex-end;gap:9px;height:150px;padding:18px 16px 0}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
+.col .b{width:100%;background:#C77179}
+.col .b.alto{background:var(--granate)}
+.col .l{font-family:'Alegreya SC',serif;font-size:12.5px;color:var(--apagado);font-weight:700}
+.leyenda{padding:12px 16px 14px;font-size:13.5px;color:var(--apagado);border-top:1px solid var(--linea);margin-top:14px;line-height:1.5}
+.rank{display:flex;align-items:center;gap:12px}
+.rank .p{font-family:'Cormorant Garamond',serif;font-size:21px;color:#C6B49B;width:20px;flex:none;font-weight:600}
+.rank .n{font-size:15px;font-weight:700;flex:1}
+.rank .v{font-size:14px;color:var(--apagado);font-weight:700}
+
+/* ---- login ---- */
+.login{flex:1;padding:96px 32px 0;background:var(--crema);position:relative}
+.login .marca{text-align:center;margin-bottom:32px}
+.login .logo{width:158px;display:block;margin:0 auto 4px}
+.login .marca h1{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:31px;font-weight:600;color:var(--tinta);line-height:1.15}
+.login .onda{height:9px;background-image:var(--onda);background-size:40px 9px;margin:14px 46px 12px}
+.login .marca p{font-family:'Alegreya SC',serif;font-size:15px;color:var(--apagado);letter-spacing:.05em}
+.lf{margin-bottom:13px}
+.lf .lbl{font-family:'Alegreya SC',serif;font-size:14.5px;font-weight:700;margin-bottom:7px;display:block;letter-spacing:.04em}
+.lf .in{background:var(--blanco);border:1.5px solid var(--linea);padding:14px;font-size:15.5px;color:#A9998A}
+.login .btn-e{background:var(--granate);color:var(--crema);text-align:center;padding:15px;
+  font-family:'Alegreya SC',serif;font-weight:700;font-size:17px;margin-top:18px;letter-spacing:.05em}
+.login .olv{text-align:center;font-size:14.5px;color:var(--apagado);margin-top:18px}
+.pie{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:13px;color:#B0A08E}
+</style>
+</head>
+<body>
+
+<div class="deck-head">
+  <h1>El Rincón del Quijote — panel de Santi</h1>
+  <p>Ocho pantallas a 390&nbsp;px. Mismo granate y misma crema que la carta, pero con mucho más blanco: esto se usa de pie, con una mano y a las once de la noche. Solo maqueta, sin lógica.</p>
+</div>
+
+<div class="gallery">
+
+<!-- 1. ACCESO -->
+<figure>
+  <div class="phone">
+    <div class="status" style="background:var(--crema)"><span>08:42</span>
+      <span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view">
+      <div class="login">
+        <div class="marca">
+          <svg class="logo" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" aria-label="Don Quijote y Sancho">
+            <g fill="#241A16">
+              <circle cx="36" cy="24" r="7"/>
+              <circle cx="36" cy="8" r="1.8"/><circle cx="49" cy="13" r="1.8"/><circle cx="53" cy="26" r="1.8"/>
+              <circle cx="47" cy="38" r="1.8"/><circle cx="24" cy="37" r="1.8"/><circle cx="19" cy="24" r="1.8"/><circle cx="23" cy="12" r="1.8"/>
+              <ellipse cx="56" cy="112" rx="16" ry="8"/>
+              <path d="M70 110 L78 98 L82 98 L84 92 L86.5 97 L83 102 L78 104 L74 110 Z"/>
+              <path d="M42 108 L36 102 L39 111 L36 118 Z"/>
+              <rect x="46" y="118" width="4" height="15" rx="1.6"/><rect x="54" y="118" width="4" height="15" rx="1.6"/>
+              <rect x="62" y="118" width="4" height="15" rx="1.6"/>
+              <ellipse cx="58" cy="98" rx="6" ry="8"/><circle cx="58" cy="87" r="4.4"/>
+              <ellipse cx="112" cy="100" rx="25" ry="11"/>
+              <path d="M133 96 L142 74 L147 73 L151 64 L155 69 L151 78 L146 81 L139 97 Z"/>
+              <path d="M88 96 L76 84 L81 98 L76 112 Z"/>
+              <rect x="92" y="108" width="5" height="26" rx="2"/><rect x="102" y="108" width="5" height="26" rx="2"/>
+              <rect x="120" y="108" width="5" height="26" rx="2"/><rect x="129" y="108" width="5" height="26" rx="2"/>
+              <ellipse cx="112" cy="80" rx="7.5" ry="11"/>
+              <circle cx="112" cy="65" r="5.4"/>
+              <path d="M105.5 62.5 h13 l-2.5 -4 h-8 z"/>
+              <path d="M96 116 L152 38 L155 41 L99 118 Z"/>
+            </g>
+            <path d="M18 136 H182" stroke="#241A16" stroke-width="1.4" opacity=".5"/>
+            <g stroke="#241A16" stroke-width="1.3" opacity=".5" fill="none">
+              <path d="M30 136 v-6 M34 136 v-8 M38 136 v-5"/>
+              <path d="M164 136 v-6 M168 136 v-9 M172 136 v-5"/>
+            </g>
+          </svg>
+          <h1>El Rincón del Quijote</h1>
+          <div class="onda"></div>
+          <p>Panel de gestión</p>
+        </div>
+        <div class="lf"><span class="lbl">Usuario</span><div class="in">santi</div></div>
+        <div class="lf"><span class="lbl">Contraseña</span><div class="in">••••••••••</div></div>
+        <div class="btn-e">Entrar</div>
+        <div class="olv">He olvidado la contraseña</div>
+        <div class="pie">nndrei.dev · soporte 24/48 h</div>
+      </div>
+    </div>
+  </div>
+  <figcaption><b>Acceso</b>El logo de la carta sobre crema, con la ondulada del menú navideño de separador. Es la única pantalla con marca a tamaño grande; a partir de aquí manda la información.</figcaption>
+</figure>
+
+<!-- 2. HOY -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>08:43</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view">
+      <div class="scroll">
+        <div class="saludo"><h1>Buenos días, Santi</h1><p>Lunes 31 de agosto</p></div>
+        <div class="tiles">
+          <div class="tile acento"><div class="n">7</div><div class="l">reservas hoy</div></div>
+          <div class="tile"><div class="n">24</div><div class="l">comensales</div></div>
+          <div class="tile"><div class="n">312</div><div class="l">escaneos QR</div></div>
+        </div>
+        <div class="aviso"><div class="g">▲</div>
+          <div class="t"><b>Dos platos siguen agotados</b>Croquetas de boletus y sepia están ocultos en la carta desde el sábado.</div></div>
+
+        <div class="pad">
+          <div class="card">
+            <div class="card-h"><h3>Próximas reservas</h3><a>Ver todas</a></div>
+            <div class="rows">
+              <div class="res"><div class="hora">13:30</div>
+                <div class="cuerpo"><div class="nom">Familia Ortega</div><div class="met">6 personas · terraza</div></div>
+                <span class="pill conf">Confirmada</span></div>
+              <div class="res"><div class="hora">14:00</div>
+                <div class="cuerpo"><div class="nom">Marisa L.</div><div class="met">2 personas · barra</div>
+                  <div class="nota">Sin gluten</div></div>
+                <span class="pill conf">Confirmada</span></div>
+              <div class="res"><div class="hora">21:00</div>
+                <div class="cuerpo"><div class="nom">Andrei H.</div><div class="met">4 personas · terraza</div></div>
+                <span class="pill pend">Sin confirmar</span></div>
+            </div>
+          </div>
+
+          <div class="seclbl">En turno ahora</div>
+          <div class="card"><div class="rows">
+            <div class="fich"><i class="enturno"></i><div class="n">Génesis</div><div class="t">desde <b>08:15</b></div></div>
+            <div class="fich"><i class="enturno"></i><div class="n">Paco</div><div class="t">desde <b>07:50</b></div></div>
+          </div></div>
+          <div style="height:22px"></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="on"><span class="g">◉</span>Hoy</div><div><span class="g">▤</span>Carta</div>
+        <div><span class="g">◷</span>Reservas</div><div><span class="g">◱</span>Personal</div><div><span class="g">≡</span>Más</div>
+      </div>
+    </div>
+  </div>
+  <figcaption><b>Hoy</b>Lo que mira nada más levantarse: cuánta gente viene, qué está agotado y quién ha fichado.</figcaption>
+</figure>
+
+<!-- 3. RESERVAS -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>12:06</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view" style="position:relative">
+      <div class="head"><h2>Reservas</h2><div class="ib">⌕</div><div class="ib">⚙</div></div>
+      <div class="scroll">
+        <div class="dias">
+          <div class="dchip"><div class="d">LUN</div><div class="n">31</div></div>
+          <div class="dchip on"><div class="d">MAR</div><div class="n">1</div><i class="pt" style="background:#FBF3E3"></i></div>
+          <div class="dchip"><div class="d">MIÉ</div><div class="n">2</div><i class="pt"></i></div>
+          <div class="dchip"><div class="d">JUE</div><div class="n">3</div><i class="pt"></i></div>
+          <div class="dchip"><div class="d">VIE</div><div class="n">4</div><i class="pt"></i></div>
+        </div>
+        <div class="pad">
+          <div class="seclbl">Comida · 4 mesas, 19 personas</div>
+          <div class="card"><div class="rows">
+            <div class="res"><div class="hora">13:00</div>
+              <div class="cuerpo"><div class="nom">Peña El Palomar</div><div class="met">8 personas · salón</div>
+                <div class="nota">Mesa larga, vienen del partido</div></div>
+              <span class="pill sent">Sentada</span></div>
+            <div class="res"><div class="hora">13:30</div>
+              <div class="cuerpo"><div class="nom">Familia Ortega</div><div class="met">6 personas · terraza</div></div>
+              <span class="pill conf">Confirmada</span></div>
+            <div class="res"><div class="hora">14:00</div>
+              <div class="cuerpo"><div class="nom">Marisa L.</div><div class="met">2 personas · barra</div>
+                <div class="nota">Sin gluten</div></div>
+              <span class="pill conf">Confirmada</span></div>
+            <div class="res"><div class="hora">14:30</div>
+              <div class="cuerpo"><div class="nom">Juan Carlos R.</div><div class="met">3 personas</div></div>
+              <span class="pill no">No vino</span></div>
+          </div></div>
+
+          <div class="seclbl">Cena · 3 mesas, 10 personas</div>
+          <div class="card"><div class="rows">
+            <div class="res"><div class="hora">20:30</div>
+              <div class="cuerpo"><div class="nom">Elena y Marcos</div><div class="met">2 personas · salón</div>
+                <div class="nota">Aniversario</div></div>
+              <span class="pill conf">Confirmada</span></div>
+            <div class="res"><div class="hora">21:00</div>
+              <div class="cuerpo"><div class="nom">Andrei H.</div><div class="met">4 personas · terraza</div></div>
+              <span class="pill pend">Sin confirmar</span></div>
+            <div class="res"><div class="hora">22:00</div>
+              <div class="cuerpo"><div class="nom">Sonia B.</div><div class="met">4 personas · terraza</div></div>
+              <span class="pill conf">Confirmada</span></div>
+          </div></div>
+          <div style="height:110px"></div>
+        </div>
+      </div>
+      <div class="fab">+ Reserva a mano</div>
+      <div class="nav">
+        <div><span class="g">◉</span>Hoy</div><div><span class="g">▤</span>Carta</div>
+        <div class="on"><span class="g">◷</span>Reservas</div><div><span class="g">◱</span>Personal</div><div><span class="g">≡</span>Más</div>
+      </div>
+    </div>
+  </div>
+  <figcaption><b>Reservas del día</b>Partido en comida y cena, con la zona en cada línea porque es lo que decide la camarera al montar. El botón grande es para la reserva que entra por teléfono.</figcaption>
+</figure>
+
+<!-- 4. CARTA -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>12:11</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view" style="position:relative">
+      <div class="head"><h2>Carta</h2><div class="ib">⌕</div><div class="ib clara">+</div></div>
+      <div class="scroll">
+        <div class="pad">
+          <div class="card">
+            <div class="grupo-h"><span class="t">Raciones</span><span class="c">22 platos</span></div>
+            <div class="cab-dosp"><span>Barra</span><span>Terraza</span></div>
+            <div class="rows">
+              <div class="item"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Lacón a la gallega</div></div>
+                <div class="dosp"><span>10,00</span><span class="t">11,00</span></div>
+                <div class="sw on"></div></div>
+              <div class="item"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Huevos rotos</div></div>
+                <div class="dosp"><span>14,00</span><span class="t">16,00</span></div>
+                <div class="sw on"></div></div>
+              <div class="item agot"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Croquetas de boletus</div><div class="sub">Oculto desde el sábado</div></div>
+                <div class="dosp"><span>11,50</span><span class="t">13,50</span></div>
+                <div class="sw"></div></div>
+              <div class="item agot"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Sepia</div><div class="sub">Oculto desde el sábado</div></div>
+                <div class="dosp"><span>14,00</span><span class="t">15,00</span></div>
+                <div class="sw"></div></div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+          <div class="card">
+            <div class="grupo-h"><span class="t">Bocadillos</span><span class="c">13 platos</span></div>
+            <div class="cab-dosp"><span>Barra</span><span>Terraza</span></div>
+            <div class="rows">
+              <div class="item"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Cinta de lomo</div></div>
+                <div class="dosp"><span>4,50</span><span class="t">5,00</span></div>
+                <div class="sw on"></div></div>
+              <div class="item"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Tortilla de patatas</div></div>
+                <div class="dosp"><span>4,50</span><span class="t">4,70</span></div>
+                <div class="sw on"></div></div>
+              <div class="item"><span class="arr">⠿</span>
+                <div class="cuerpo"><div class="nom">Ternera</div></div>
+                <div class="dosp"><span>5,50</span><span class="t">6,50</span></div>
+                <div class="sw on"></div></div>
+            </div>
+          </div>
+          <div style="height:26px"></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div><span class="g">◉</span>Hoy</div><div class="on"><span class="g">▤</span>Carta</div>
+        <div><span class="g">◷</span>Reservas</div><div><span class="g">◱</span>Personal</div><div><span class="g">≡</span>Más</div>
+      </div>
+    </div>
+  </div>
+  <figcaption><b>Carta</b>Los dos precios se ven y se editan en la misma línea. El interruptor quita el plato de la carta pública al instante, sin borrarlo: es el gesto de cada día.</figcaption>
+</figure>
+
+<!-- 5. EDITAR PLATO -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>12:13</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view">
+      <div class="head"><div class="ib">‹</div><h2>Editar plato</h2></div>
+      <div class="scroll">
+        <div class="campo"><span class="lbl">Nombre</span><div class="input">Huevos rotos</div></div>
+        <div class="campo"><span class="lbl">Descripción</span>
+          <div class="input" style="height:74px;line-height:1.5;font-size:15px">Picadillo, chorizo, 4 huevos y jamón</div></div>
+        <div class="campo"><div class="dos">
+          <div><span class="lbl">Precio barra</span><div class="input">14,00 €</div></div>
+          <div><span class="lbl">Precio terraza</span><div class="input">16,00 €</div></div>
+        </div></div>
+        <div class="campo"><span class="lbl">Categoría</span><div class="input">Raciones ⌄</div></div>
+        <div class="campo"><span class="lbl">Alérgenos</span>
+          <div class="tagsel">
+            <span class="tg on">Huevo</span><span class="tg">Gluten</span><span class="tg">Lácteos</span>
+            <span class="tg">Pescado</span><span class="tg">Frutos secos</span><span class="tg on">Sulfitos</span>
+            <span class="tg">Soja</span><span class="tg">Marisco</span></div></div>
+        <div class="campo"><span class="lbl">Foto</span></div>
+        <div class="foto-up"><div class="g">▣</div><div>Toca para hacer una foto o subirla</div></div>
+        <div class="campo"><div class="card"><div class="rows"><div class="item">
+          <div class="cuerpo"><div class="nom">Visible en la carta</div><div class="sub">Los clientes lo ven ahora mismo</div></div>
+          <div class="sw on"></div></div></div></div></div>
+        <div class="campo"><div class="btn-d">Eliminar plato</div></div>
+        <div style="height:14px"></div>
+      </div>
+      <div class="acciones"><div class="btn btn-p">Guardar cambios</div></div>
+    </div>
+  </div>
+  <figcaption><b>Editar plato</b>Los dos precios juntos, uno al lado del otro, para que no se le olvide subir uno de los dos. Alérgenos como etiquetas que se tocan, no un desplegable.</figcaption>
+</figure>
+
+<!-- 6. CUADRANTE -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>12:20</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view">
+      <div class="head"><h2>Cuadrante</h2><div class="ib">‹</div><div class="ib">›</div></div>
+      <div class="scroll">
+        <div class="pad">
+          <div class="seclbl" style="margin-top:2px">Semana del 1 al 7 de septiembre</div>
+          <div class="card">
+            <div class="dia-blq">
+              <div class="cab"><span class="d">Martes 1</span><span class="h">08:00 – 02:00</span></div>
+              <div class="turno"><div class="av">G</div><div class="n">Génesis</div><div class="r">12:00–17:00</div></div>
+              <div class="turno"><div class="av b">P</div><div class="n">Paco</div><div class="r">08:00–16:00</div></div>
+              <div class="turno"><div class="av c">L</div><div class="n">Lucía</div><div class="r">19:00–02:00</div></div>
+            </div>
+            <div class="dia-blq">
+              <div class="cab"><span class="d">Miércoles 2</span><span class="h">08:00 – 02:00</span></div>
+              <div class="turno"><div class="av b">P</div><div class="n">Paco</div><div class="r">08:00–16:00</div></div>
+              <div class="turno"><div class="av c">L</div><div class="n">Lucía</div><div class="r">12:00–17:00</div></div>
+              <div class="vacio">Noche sin cubrir</div>
+            </div>
+            <div class="dia-blq">
+              <div class="cab"><span class="d">Jueves 3</span><span class="h">08:00 – 02:00</span></div>
+              <div class="turno"><div class="av">G</div><div class="n">Génesis</div><div class="r">19:00–02:00</div></div>
+              <div class="turno"><div class="av b">P</div><div class="n">Paco</div><div class="r">08:00–16:00</div></div>
+            </div>
+            <div class="dia-blq" style="border-bottom:none">
+              <div class="cab"><span class="d">Viernes 4</span><span class="h">08:00 – 02:30</span></div>
+              <div class="turno"><div class="av">G</div><div class="n">Génesis</div><div class="r">19:00–02:30</div></div>
+              <div class="turno"><div class="av c">L</div><div class="n">Lucía</div><div class="r">19:00–02:30</div></div>
+            </div>
+          </div>
+          <div style="height:22px"></div>
+        </div>
+      </div>
+      <div class="acciones">
+        <div class="btn btn-p">Avisar del cuadrante al equipo</div>
+        <div class="btn btn-l">Añadir turno</div>
+      </div>
+    </div>
+  </div>
+  <figcaption><b>Cuadrante semanal</b>Por días en vertical, no en rejilla: siete columnas en 390&nbsp;px no se leen. Los huecos sin cubrir se cantan en granate.</figcaption>
+</figure>
+
+<!-- 7. FICHAJES -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>12:24</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view">
+      <div class="head"><h2>Fichajes</h2><div class="ib">⇩</div></div>
+      <div class="scroll">
+        <div class="aviso" style="margin-top:14px"><div class="g">▲</div>
+          <div class="t"><b>Paco no cerró el turno de ayer</b>Se quedó fichado a las 16:00. Corrígelo antes de sacar el informe del mes.</div></div>
+        <div class="pad">
+          <div class="seclbl">Hoy, lunes 31</div>
+          <div class="card"><div class="rows">
+            <div class="fich"><i class="enturno"></i><div class="n">Génesis</div><div class="t">entró <b>08:15</b></div></div>
+            <div class="fich"><i class="enturno"></i><div class="n">Paco</div><div class="t">entró <b>07:50</b></div></div>
+          </div></div>
+
+          <div class="seclbl">Domingo 30</div>
+          <div class="card"><div class="rows">
+            <div class="fich"><div class="n">Génesis</div><div class="t">12:02 – 17:14 · <b>5 h 12</b></div></div>
+            <div class="fich"><div class="n">Lucía</div><div class="t">19:28 – 02:09 · <b>6 h 41</b></div></div>
+            <div class="fich"><div class="n" style="color:var(--granate)">Paco</div><div class="t">08:44 – sin salida · <b>—</b></div></div>
+          </div></div>
+
+          <div class="seclbl">Resumen de agosto</div>
+          <div class="card"><div class="rows">
+            <div class="fich"><div class="n">Génesis</div><div class="t"><b>142 h</b></div></div>
+            <div class="fich"><div class="n">Paco</div><div class="t"><b>168 h</b></div></div>
+            <div class="fich"><div class="n">Lucía</div><div class="t"><b>96 h</b></div></div>
+          </div></div>
+          <div style="height:24px"></div>
+        </div>
+      </div>
+      <div class="acciones"><div class="btn btn-l">Descargar informe de agosto</div></div>
+    </div>
+  </div>
+  <figcaption><b>Control horario</b>Lo importante no son las horas, son los errores: el fichaje sin cerrar sale arriba del todo porque es lo que rompe el informe.</figcaption>
+</figure>
+
+<!-- 8. ESTADÍSTICAS -->
+<figure>
+  <div class="phone">
+    <div class="status"><span>12:31</span><span class="sig"><i class="bar" style="height:6px"></i><i class="bar" style="height:9px"></i><i class="bar" style="height:12px"></i><i class="bat"></i></span></div>
+    <div class="view">
+      <div class="head"><h2>La carta en números</h2></div>
+      <div class="scroll">
+        <div class="pad">
+          <div class="tiles" style="padding:0">
+            <div class="tile acento"><div class="n">312</div><div class="l">escaneos esta semana</div></div>
+            <div class="tile"><div class="n">2:40</div><div class="l">minutos de media</div></div>
+            <div class="tile"><div class="n">18%</div><div class="l">en inglés</div></div>
+          </div>
+
+          <div class="seclbl">Escaneos por día</div>
+          <div class="card">
+            <div class="graf">
+              <div class="col"><div class="b" style="height:34%"></div><div class="l">L</div></div>
+              <div class="col"><div class="b" style="height:52%"></div><div class="l">M</div></div>
+              <div class="col"><div class="b" style="height:46%"></div><div class="l">X</div></div>
+              <div class="col"><div class="b" style="height:61%"></div><div class="l">J</div></div>
+              <div class="col"><div class="b alto" style="height:88%"></div><div class="l">V</div></div>
+              <div class="col"><div class="b alto" style="height:100%"></div><div class="l">S</div></div>
+              <div class="col"><div class="b" style="height:72%"></div><div class="l">D</div></div>
+            </div>
+            <div class="leyenda">El sábado se escanea cuatro veces más que el lunes. Los eventos, mejor publicarlos el jueves.</div>
+          </div>
+
+          <div class="seclbl">Platos más mirados</div>
+          <div class="card"><div class="rows">
+            <div class="rank"><span class="p">1</span><span class="n">Huevos rotos</span><span class="v">184</span></div>
+            <div class="rank"><span class="p">2</span><span class="n">Fritura andaluza</span><span class="v">151</span></div>
+            <div class="rank"><span class="p">3</span><span class="n">Patatas bravas</span><span class="v">140</span></div>
+            <div class="rank"><span class="p">4</span><span class="n">Croquetas caseras de jamón</span><span class="v">98</span></div>
+            <div class="rank"><span class="p">5</span><span class="n">Tosta de solomillo</span><span class="v">77</span></div>
+          </div></div>
+
+          <div class="seclbl">Buscado y no encontrado</div>
+          <div class="card"><div class="rows">
+            <div class="rank"><span class="n">«menú del día»</span><span class="v">21 veces</span></div>
+            <div class="rank"><span class="n">«paella»</span><span class="v">14 veces</span></div>
+            <div class="rank"><span class="n">«sin gluten»</span><span class="v">9 veces</span></div>
+          </div></div>
+          <div style="height:26px"></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div><span class="g">◉</span>Hoy</div><div><span class="g">▤</span>Carta</div>
+        <div><span class="g">◷</span>Reservas</div><div><span class="g">◱</span>Personal</div><div class="on"><span class="g">≡</span>Más</div>
+      </div>
+    </div>
+  </div>
+  <figcaption><b>Estadísticas</b>Escaneos, no ventas: sin TPV no hay datos de caja. Lo que vale de verdad es «buscado y no encontrado» — le dice a Santi qué le piden y no tiene.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>

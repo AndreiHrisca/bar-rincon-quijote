@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Barra de un día — banco de pruebas</title>
+<!--
+  BANCO DE PRUEBAS DE LA PIEZA, no una pantalla del panel.
+  ---------------------------------------------------------------------------
+  Carga el componente de verdad (panel/js/piezas/barra-dia.js) con el CSS de
+  verdad y le pasa a mano los casos que tiene que resolver, incluidos los que
+  hoy no hay en la base. Sirve para mirarlo a 320, 390 y 430 px sin tener que
+  fabricar fichajes en produccion.
+
+  Se abre con un servidor estatico desde la raiz del repositorio:
+      python3 -m http.server 8099
+      http://localhost:8099/pruebas/barra-dia.html
+-->
+<link rel="stylesheet" href="/compartido/fuentes/fuentes.css">
+<link rel="stylesheet" href="/compartido/css/tokens.css">
+<link rel="stylesheet" href="/compartido/css/base.css">
+<link rel="stylesheet" href="/panel/css/panel.css">
+<style>
+  body { background: var(--fondo-panel); }
+  .banco { max-width: 430px; margin: 0 auto; padding: var(--sp-4); }
+  .banco h1 {
+    font-family: var(--letra-rotulo); font-weight: 500;
+    font-size: var(--fs-title); letter-spacing: var(--track-rotulo);
+    margin: 0 0 var(--sp-4);
+  }
+  .caso { margin-bottom: var(--sp-5); }
+  .caso > p {
+    font-size: var(--fs-caption); line-height: var(--lh-tight);
+    color: var(--apagado); margin: 0 0 var(--sp-2);
+  }
+</style>
+</head>
+<body>
+<div class="banco" id="banco"></div>
+
+<script type="module">
+import { el, pintar } from '/panel/js/dom.js'
+import { barraDia } from '/panel/js/piezas/barra-dia.js'
+import { tramoDeTurno } from '/panel/js/horas.js'
+
+const t = (a, b) => tramoDeTurno({ hora_inicio: a, hora_fin: b })
+const abierto = (a) => ({ inicio: Number(a.slice(0, 2)) * 60 + Number(a.slice(3)), fin: null })
+
+const corregir = { texto: 'corregir', alPulsar: () => {} }
+const asignar = { texto: 'asignar', alPulsar: () => {} }
+
+const casos = [
+  ['Fichajes — los seis casos del encargo, tal cual', {
+    filas: [
+      { nombre: 'Marisa', tramos: [abierto('09:00')], accion: corregir },
+      { nombre: 'Génesis', tramos: [t('13:00', '16:00'), abierto('20:00')], accion: corregir },
+      { nombre: 'Santi', tramos: [t('08:00', '13:00'), t('17:00', '20:00')] },
+      { nombre: 'Carmen', tramos: [t('09:00', '17:00')] },
+      { nombre: 'Kevin', tramos: [t('16:00', '00:30')] },
+      { nombre: 'Adriana', tramos: [t('10:00', '14:00'), t('20:00', '01:00')] },
+    ],
+  }],
+
+  ['Cuadrante — con línea de cambio de franja a las 16:00 y fila de huecos', {
+    franjas: ['16:00'],
+    filas: [
+      { nombre: 'Santi', tramos: [t('08:00', '16:00')] },
+      { nombre: 'Génesis', tramos: [t('12:00', '16:00'), t('20:00', '00:00')] },
+      { nombre: 'Carmen', tramos: [t('17:00', '20:00')] },
+      { nombre: 'Sin cubrir', hueco: true, accion: asignar,
+        tramos: [t('16:00', '17:00'), t('20:00', '00:00')] },
+    ],
+  }],
+
+  ['Casos de borde', {
+    filas: [
+      { nombre: 'Diez minutos', tramos: [t('10:00', '10:10')] },
+      { nombre: 'Nombre larguísimo que no cabe', tramos: [t('08:00', '16:00')] },
+      { nombre: 'Día entero', tramos: [t('00:00', '23:59')] },
+      { nombre: 'Tres tramos', tramos: [t('08:00', '11:00'), t('13:00', '15:00'), t('19:00', '22:00')] },
+      { nombre: 'Sin nada', tramos: [] },
+    ],
+  }],
+
+  ['Eje recortado a la franja del bar (08:00–24:00) — el mismo componente', {
+    inicioEje: 8, finEje: 24, franjas: ['16:00'],
+    filas: [
+      { nombre: 'Santi', tramos: [t('08:00', '16:00')] },
+      { nombre: 'Kevin', tramos: [t('16:00', '00:30')] },
+      { nombre: 'Marisa', tramos: [abierto('09:00')], accion: corregir },
+    ],
+  }],
+]
+
+// pintar() aplana UN SOLO nivel: la lista de casos va envuelta en un el(),
+// o acaba en el DOM como el texto "[object HTMLDivElement]". Ya ha pasado.
+pintar(document.getElementById('banco'),
+  el('h1', { text: 'Barra de un día' }),
+  el('div', {}, casos.map(([titulo, config]) => el('div', { class: 'caso' }, [
+    el('p', { text: titulo }),
+    el('section', { class: 'tarjeta' }, [barraDia(config)]),
+  ]))))
+</script>
+</body>
+</html>

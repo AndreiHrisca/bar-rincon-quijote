@@ -1,0 +1,33 @@
+{
+  "name": "Panel · El Rincón del Quijote",
+  "short_name": "Quijote",
+  "description": "Reservas, carta, almacén y personal de El Rincón del Quijote.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "/panel/",
+  "scope": "/panel/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6EFE1",
+  "theme_color": "#93202A",
+  "icons": [
+    { "src": "/panel/img/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/panel/img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/panel/img/icono-recortable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Apuntar una falta",
+      "short_name": "Falta algo",
+      "description": "Se ha acabado algo: dos toques y queda apuntado.",
+      "url": "/panel/almacen/falta",
+      "icons": [{ "src": "/panel/img/icono-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reservas de hoy",
+      "short_name": "Reservas",
+      "url": "/panel/reservas",
+      "icons": [{ "src": "/panel/img/icono-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
