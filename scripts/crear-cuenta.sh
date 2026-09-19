@@ -2,11 +2,11 @@
 #
 # Crea (o actualiza) una cuenta de acceso al panel.
 #
-#   ./scripts/crear-cuenta.sh santi@barrinconquijote.es dueno "Santi"
+#   ./scripts/crear-cuenta.sh santi@barrinconquijote.es admin "Santi"
 #
 # Por que existe este script:
 #   Hasta la fase 9 no hay pantalla de Personal, asi que la primera cuenta de
-#   verdad —la del dueno, que es la unica que despues puede crear a las demas—
+#   verdad —la de administrador, la unica que despues puede crear a las demas—
 #   habria que hacerla a mano desde el panel de administracion de PocketBase.
 #   Eso son ocho campos y es facil dejarse "rol" sin poner, que es justo el que
 #   gobierna todas las reglas de acceso.
@@ -21,7 +21,7 @@
 # Tampoco se escribe en ningun log: el script no imprime la clave nunca.
 #
 # Uso:  ./scripts/crear-cuenta.sh CORREO ROL [NOMBRE]
-#       roles: dueno | encargado | cocina | empleado
+#       roles: admin | empleado
 set -euo pipefail
 
 raiz="$(cd "$(dirname "$0")/.." && pwd)"
@@ -33,20 +33,20 @@ nombre="${3:-}"
 
 if [ -z "$correo" ] || [ -z "$rol" ]; then
   echo "Uso: $0 CORREO ROL [NOMBRE]" >&2
-  echo "     roles: dueno | encargado | cocina | empleado" >&2
+  echo "     roles: admin | empleado" >&2
   exit 1
 fi
 
 case "$rol" in
-  dueno|encargado|cocina|empleado) ;;
-  *) echo "Rol no valido: $rol (dueno | encargado | cocina | empleado)" >&2; exit 1 ;;
+  admin|empleado) ;;
+  *) echo "Rol no valido: $rol (admin | empleado)" >&2; exit 1 ;;
 esac
 
 [ -n "$nombre" ] || nombre="${correo%%@*}"
 
 # --- Credenciales del superusuario -----------------------------------------
 # Hace falta uno para poder crear cuentas: users.createRule solo deja al rol
-# "dueno", y la primera cuenta de dueno todavia no existe.
+# "admin", y la primera cuenta de administrador todavia no existe.
 SUPER_ID="${PB_SUPER_ID:-}"
 if [ -z "$SUPER_ID" ]; then
   printf 'Correo del superusuario de PocketBase (/_/): ' >&2

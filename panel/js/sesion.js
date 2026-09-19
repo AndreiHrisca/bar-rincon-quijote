@@ -8,16 +8,22 @@
  * hooks de pb_hooks/roles.pb.js son los que mandan. Si alguien esconde una
  * pantalla tocando el JavaScript del navegador, no consigue nada.
  *
- * Los roles se escriben sin enye ("dueno") porque viajan dentro de reglas de
- * acceso y de URLs; en pantalla se escriben bien.
+ * DOS ROLES Y NADA MAS (migracion 1757200000_rol_administrador.js):
+ *
+ *   admin     Todo. Es quien administra el negocio.
+ *   empleado  El trabajo del turno: reservas y carta enteras, apuntar y
+ *             resolver faltas, fichar y ver SUS horas.
+ *
+ * Antes habia cuatro —dueno, encargado, cocina y empleado— y no los usaba
+ * nadie: en la base solo habia cuentas de «dueno» y una de «empleado». Cuatro
+ * roles para tres personas no son un modelo de permisos, son cuatro sitios
+ * donde equivocarse.
  */
 
 import { pb } from './pb.js'
 
 export const NOMBRE_ROL = {
-  dueno: 'Dueño',
-  encargado: 'Encargado',
-  cocina: 'Cocina',
+  admin: 'Administrador',
   empleado: 'Empleado',
 }
 
@@ -41,13 +47,31 @@ export function nombreCorto() {
   return n ? n.split(/\s+/)[0] : (u.email || '')
 }
 
-export function esDueno() {
-  return rol() === 'dueno'
+/**
+ * Quien administra el negocio: ajustes, datos legales, cuentas y roles, fichas
+ * del equipo, cuadrante, eventos, estadisticas, almacen (el catalogo) y la
+ * pantalla de Actividad. Y todos los borrados.
+ */
+export function esAdmin() {
+  return rol() === 'admin'
 }
 
-/** Quien puede confirmar, sentar y apuntar reservas (seccion 7). */
+/**
+ * Quien puede confirmar, sentar y apuntar reservas (seccion 7).
+ *
+ * AHORA ES TODO EL EQUIPO, y por eso la funcion sigue existiendo en vez de
+ * borrarse: dice POR QUE una pantalla esta abierta, no solo que lo esta. La
+ * regla de la coleccion es la misma («con sesion basta»), asi que esto no
+ * esconde ningun boton; lo que hace es que, el dia que haya que volver a
+ * cerrarla, haya un unico sitio donde tocar.
+ */
 export function gestionaReservas() {
-  return rol() === 'dueno' || rol() === 'encargado'
+  return haySesion()
+}
+
+/** Quien puede editar la carta: ver los platos, cambiarlos y ocultarlos. */
+export function gestionaCarta() {
+  return haySesion()
 }
 
 /**
@@ -59,7 +83,7 @@ export function gestionaReservas() {
  * abierto ayer y tocar las fichas del equipo.
  */
 export function gestionaPersonal() {
-  return rol() === 'dueno' || rol() === 'encargado'
+  return esAdmin()
 }
 
 /**
@@ -72,7 +96,7 @@ export function gestionaPersonal() {
  * minimo, cambiar la unidad.
  */
 export function mantieneAlmacen() {
-  return rol() === 'dueno' || rol() === 'encargado'
+  return esAdmin()
 }
 
 /**
@@ -90,7 +114,25 @@ export async function entrar(identidad, clave) {
   return pb.collection('users').authWithPassword(String(identidad).trim(), clave)
 }
 
+/**
+ * Cierra la sesion.
+ *
+ * PRIMERO SE AVISA AL SERVIDOR y despues se tira el token, porque el aviso va
+ * firmado con ese token: al reves no llegaria. Es lo que deja la salida
+ * apuntada en «Actividad» (pb_hooks/actividad.pb.js), ya que PocketBase no
+ * tiene cierre de sesion propio —el token es un JWT y el navegador simplemente
+ * lo olvida—.
+ *
+ * NO SE ESPERA A QUE CONTESTE NI SE MIRA SI FALLA. Quien pulsa «Salir» tiene
+ * que salir, haya red o no: el panel se usa en un sotano sin cobertura. Lo peor
+ * que pasa sin red es que falte una linea en el diario.
+ */
 export function salir() {
+  try {
+    pb.send('/api/quijote/salir', { method: 'POST', body: {} }).catch(() => {})
+  } catch (err) {
+    // Ni eso puede impedir el cierre de sesion.
+  }
   pb.authStore.clear()
 }
 

@@ -18,7 +18,7 @@
  *   - SE PUEDE DAR DE ALTA UN PRODUCTO CON SOLO EL NOMBRE. Si falta algo que no
  *     está en la lista, se escribe y se apunta; queda marcado como «sin
  *     configurar» para que alguien lo termine luego (pb_hooks/almacen.pb.js).
- *     Lo contrario —«ese producto no existe, avisa al encargado»— es la forma
+ *     Lo contrario —«ese producto no existe, avisa a un administrador»— es la forma
  *     más segura de que la falta no se apunte en ninguna parte.
  *
  *   - APUNTAR NO CIERRA LA PANTALLA. Cuando se repasa la cámara se apuntan tres

@@ -10,7 +10,7 @@
 //
 // Las dos protecciones son correctas para una aplicacion con correo saliente y
 // gente que se administra sola. Aqui no hay ni una cosa ni la otra: no hay SMTP
-// (D-29) y las cuentas las lleva el dueno desde el panel. Quien pierde la clave
+// (D-29) y las cuentas las lleva el administrador desde el panel. Quien pierde la clave
 // se la pide a Santi, y si el correo esta mal escrito hay que poder arreglarlo
 // sin borrar la cuenta y volver a crearla.
 //
@@ -20,7 +20,7 @@
 //
 // POR QUE ESTO NO ES UN AGUJERO: la ruta se salta comprobaciones de PocketBase,
 // asi que quien puede llamarla es lo unico que la separa de un desastre.
-//   - Solo el dueno, y el rol se lee de la SESION, no del navegador.
+//   - Solo el administrador, y el rol se lee de la SESION, no del navegador.
 //   - Nunca sobre su propia cuenta: si se deja la sesion abierta en el movil de
 //     la barra, eso seria regalarsela a quien lo coja. La suya se cambia por el
 //     camino normal, escribiendo la que tiene ahora.
@@ -39,9 +39,9 @@
 routerAdd('POST', '/api/quijote/cuenta', (e) => {
   const quien = e.auth
 
-  // Sin sesion o sin ser el dueno, ni se dice si la cuenta existe.
-  if (!quien || quien.getString('rol') !== 'dueno') {
-    return e.json(403, { error: 'Solo el dueño puede cambiar la contraseña o el correo de una cuenta.' })
+  // Sin sesion o sin ser administrador, ni se dice si la cuenta existe.
+  if (!quien || quien.getString('rol') !== 'admin') {
+    return e.json(403, { error: 'Solo un administrador puede cambiar la contraseña o el correo de una cuenta.' })
   }
 
   const datos = new DynamicModel({ usuario: '', clave: '', correo: '' })

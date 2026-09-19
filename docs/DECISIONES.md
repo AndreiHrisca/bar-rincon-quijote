@@ -811,6 +811,11 @@ ficha. **Es una lectura de la maqueta y conviene confirmarla con el cliente**
 
 ### D-43 · Al encargado se le bloquea el precio, no se le da un error
 
+> **SUPERADA por D-99 (2026-09-14).** El rol `encargado` ya no existe y la carta
+> la mantiene todo el equipo, precios incluidos. Se deja escrita porque el
+> razonamiento de fondo —un campo que no se puede tocar tiene que parecer que no
+> se puede tocar— sigue valiendo para cualquier otro candado.
+
 **Decisión:** al **editar**, el encargado se encuentra los dos campos de precio
 desactivados y con el motivo escrito debajo. Al **crear** un plato sí los pone:
 `precio_barra` es obligatorio y alguien tiene que escribirlo.
@@ -2109,6 +2114,214 @@ Es la fase 11 y está por hacer: `docs/MANUAL-SANTI.md`, `docs/MANUAL-COCINA.md`
 
 ---
 
+## Panel de administración (2026-09-14)
+
+Unificación de roles, permisos comprobados en el servidor y el diario del
+panel. Lo que se pidió: quitar «Próximamente», arreglar la estructura de «Del
+negocio», añadir «Actividad» y dejar un solo rol superior.
+
+---
+
+### D-98 · Dos roles, no cuatro: `dueno` desaparece y nace `admin`
+
+**Decisión (2026-09-14):** los cuatro roles de la sección 7 del encargo —`dueno`,
+`encargado`, `cocina`, `empleado`— se quedan en **dos**: `admin` y `empleado`.
+Migración `1757200000_rol_administrador.js`.
+
+**Por qué ahora:** un año después, en la base había **dos cuentas de `dueno` y
+una de `empleado`**. `encargado` y `cocina` no los usó nadie nunca. Cuatro roles
+para tres personas no son un modelo de permisos: son cuatro sitios donde
+equivocarse, cuatro ramas en cada regla de acceso y cuatro casos que probar. Y lo
+que sí pasaba es que la persona que atiende la barra no podía ni mirar la lista
+de reservas ni corregir la descripción de un plato, que es lo que hace todo el
+día.
+
+**Por qué `admin` y no `dueño`:** «dueño» describe a una persona —quién es el
+titular del bar— y lo que hay que describir es un permiso: quién administra el
+sistema. El día que Santi le dé acceso completo a su hija, «dueño» sería mentira
+y «administrador» no. La palabra desaparece del producto entero: pantallas,
+textos, hooks, pruebas, semillas y documentación. Solo sobrevive dentro de las
+migraciones anteriores a esta, que cuentan lo que había, y en una prueba que
+comprueba que ya **no** se puede poner.
+
+**La conversión:** `dueno → admin`, y `encargado` y `cocina → empleado`. Nadie
+pierde permisos: las dos cuentas de `dueno` pueden exactamente lo mismo, y la de
+`empleado` **gana** reservas y carta. Los dos roles que nadie usaba se convierten
+igual, para que la conversión sea segura el día que se restaure una copia vieja.
+
+**El orden de la migración importa y está escrito allí:** primero se convierten
+los datos con `UPDATE` directo y después se cambia el campo `select`. Al revés no
+se puede —mientras el campo solo admita los valores viejos, guardar `admin` falla
+la validación; en cuanto solo admita los nuevos, cualquier fila que siga en
+`dueno` es inválida— y el `UPDATE` es lo único que no pasa por la validación.
+
+**Dónde se partió lo que era `dueno || encargado`:**
+
+| Antes | Ahora | Por qué |
+|---|---|---|
+| Reservas, platos y categorías | **cualquiera con sesión** | Es el trabajo del turno: quien coge el teléfono y quien sienta a la gente. |
+| Proveedores, catálogo de productos, eventos, fichas del equipo, cuadrante, cerrar recuentos, estadísticas, ajustes, datos legales, cuentas y **todos los borrados** | **solo `admin`** | Es administrar el negocio, y el encargo lo deja fuera del empleado con todas las letras. |
+
+**Los fichajes NO se abrieron** aunque ahora solo haya dos roles: el
+administrador los ve todos y cada cual ve los suyos. Las horas de los demás no
+son asunto de nadie (sección 12).
+
+---
+
+### D-99 · El precio de un plato lo cambia el turno, y queda escrito quién
+
+**Decisión (2026-09-14):** se retira el candado de `precio_barra`,
+`precio_terraza` y `admite_extras` que D-32 y D-43 le ponían al encargado. Un
+empleado edita el plato **entero**.
+
+**Por qué:** un plato que se puede editar entero *menos el número más importante*
+es una regla que se explica bien en una conversación y fatal en una pantalla. Y
+el encargo nuevo pide expresamente que el empleado pueda modificar los platos
+existentes. Lo que hacía de verdad esa regla era empujar el trabajo a WhatsApp:
+«Santi, que el café ha subido a 1,50».
+
+**La garantía no desaparece, cambia de sitio y mejora.** Antes era un candado que
+nadie podía saltarse y del que **no quedaba rastro**: si el precio lo cambiaba
+quien sí podía, no había forma de saber quién ni cuándo. Ahora cada cambio de
+precio queda en «Actividad» con el antes, el después, el nombre de quien lo hizo
+y la hora (D-100). Para un bar de barrio eso resuelve el problema real —«¿quién
+ha puesto esto a 19,50?»— mucho mejor que impedirlo.
+
+Con el candado se va también el segundo hook de `pb_hooks/roles.pb.js`. El
+primero —nadie se cambia el rol a sí mismo— **se queda**: ese sí es una escalada
+de privilegios.
+
+---
+
+### D-100 · Actividad: un diario del panel, y una sola puerta para escribirlo
+
+**Decisión (2026-09-14):** una colección `actividad` que guarda quién hizo qué,
+sobre qué, cuándo y —para lo que lo merece— qué había antes y qué hay ahora. Se
+escribe desde **un solo sitio**, `pb_hooks/actividad.pb.js`, con la lógica en
+`pb_hooks/lib/actividad.js`, que se prueba suelta.
+
+**Una puerta, no una llamada en cada pantalla.** La alternativa —que cada vista
+apunte lo suyo— tiene dos problemas y los dos son graves: se olvida justo en la
+pantalla nueva que alguien añada dentro de seis meses, y cada sitio redacta la
+frase a su manera, así que el diario acaba hablando cuatro idiomas. Aquí las
+colecciones auditadas son una lista de etiquetas en tres `onRecord*Request`.
+
+**Por qué los hooks de petición y no los de «ya se ha guardado»**, que serían los
+naturales: en PocketBase 0.40, `onRecordAfterUpdateSuccess` recibe un
+`RecordEvent`, que **no lleva la petición dentro**. Sin `e.auth` no hay forma de
+saber quién lo hizo, y un diario sin autor no es un diario. El de petición sí la
+lleva. El precio es llamar a `e.next()` en medio: se mira el registro antes, se
+deja que la operación ocurra, y **solo si no ha lanzado** se escribe la línea. Un
+403 no es una acción, es un intento.
+
+**El actor sale del token y de ningún otro sitio.** Nunca del cuerpo de la
+petición. Es la diferencia entre un registro de auditoría y un cuaderno de
+recados: si el navegador dice quién firma, cualquiera firma como cualquiera. Por
+eso `actorDe(e)` solo lee `e.auth` y no existe ninguna forma de pasarle un
+nombre.
+
+**Nadie lo escribe desde fuera.** Las cuatro reglas de escritura de la colección
+están en `null` —solo superusuario— y las líneas entran por `app.save()` desde el
+hook, que no pasa por las reglas. Si `createRule` fuera `@request.auth.id != ""`,
+cualquiera con sesión podría fabricarse una línea diciendo que fue otro quien
+borró la reserva. **Tampoco se editan ni se borran**, ni siendo administrador: un
+diario que se puede corregir no prueba nada.
+
+**El nombre del autor se guarda copiado en la propia línea** (`actor_nombre`),
+además de la relación. No es duplicar por duplicar: si alguien se cambia el
+nombre, o si su cuenta desaparece, la línea de hace ocho meses tiene que seguir
+diciendo quién era entonces. Por eso la relación tampoco borra en cascada.
+
+**La frase se escribe una vez y se guarda hecha**, no se compone al pintar.
+Dentro de un año el plato se llamará de otra forma, o no existirá, y «María
+cambió el precio de Cachopo» tiene que seguir siendo verdad.
+
+**Lo que no entra, y las tres razones:**
+
+1. **La web pública.** Sin sesión no se apunta nada. El diario es de las acciones
+   del equipo; lo que hace la gente en la carta ya se cuenta, sin identificar a
+   nadie, en `metricas`.
+2. **El superusuario de `/_/`.** No es una persona del negocio: es la válvula de
+   escape para arreglar la base, y por ahí entran las migraciones y las pruebas.
+   Si se auditara, cada pasada de pruebas dejaría cien líneas falsas.
+3. **Un guardado que no cambia nada.** El panel repinta pantallas enteras y manda
+   el registro completo en cada `PATCH`. Sin ese filtro, abrir un plato y
+   cerrarlo dejaría una línea, y el diario dejaría de servir para lo único que
+   está.
+
+**Qué no se guarda nunca:** contraseñas, hashes, `tokenKey`, tokens y claves se
+quitan enteros. Los datos de contacto de un **cliente** —teléfono, correo— se
+marcan como cambiados pero no se copian: quien reserva una mesa no ha dado su
+teléfono para acabar en un registro de auditoría. Hay dos cierres para esa
+puerta: `publicExport()` ya deja fuera los campos ocultos de PocketBase, y encima
+va la lista negra de `lib/actividad.js`. Cuando detrás hay contraseñas, dos.
+
+**Se engancha al acceso por contraseña y no a `onRecordAuthRequest`**, que es el
+que parece: aquel salta también en cada `authRefresh()`, y el panel refresca la
+sesión cada vez que se abre. El diario se llenaría de «Santi inició sesión»
+cuatro veces por turno.
+
+**Salir necesita una ruta propia** (`POST /api/quijote/salir`). PocketBase no
+tiene cierre de sesión —el token es un JWT y el navegador lo olvida—, así que el
+panel avisa **antes** de tirarlo, que es cuando el aviso todavía va firmado. No
+se espera respuesta ni se mira si falla: quien pulsa «Salir» tiene que salir haya
+red o no.
+
+**La retención es la misma que la de las reservas** (12 meses por defecto,
+`ajustes.meses_retencion_reservas`), y eso no es comodidad. Una línea dice «Santi
+modificó la reserva de Marta García»: ahí está el nombre de una clienta. Si el
+diario durase más que la reserva, el borrado de D-96 no serviría de nada y la
+promesa de la política de privacidad sería mentira por la puerta de atrás.
+
+**Los índices** son `(creado DESC)` —la consulta de siempre— y
+`(actor, creado DESC)` y `(recurso, creado DESC)`, que son los dos filtros de la
+pantalla. La fecha va dentro de los dos últimos porque el orden es siempre el
+mismo: sin esa segunda columna, filtrar por persona obliga a SQLite a ordenar a
+mano lo que encuentre.
+
+---
+
+### D-101 · Una fila que se pulsa se escribe una sola vez, venga de donde venga
+
+**Decisión (2026-09-14):** en «Más», todas las filas se construyen con la misma
+función, lleven a una ruta (`<a>`) o abran una hoja (`<button>`). Y `.fila-ir`
+lleva `width: 100%` y `text-align: left`.
+
+**El fallo que arregla:** «Horario del bar» y «Datos legales» salían **apretadas
+una al lado de la otra**, como dos tarjetas estrechas, mientras el resto de
+opciones ocupaba la fila entera. Eran las dos únicas que se escribían a mano con
+un `<button>` en vez de pasar por `filaIr()`.
+
+**La causa, que conviene tener escrita:** un `<a>` con `display: flex` dentro de
+un bloque ocupa el ancho disponible sin más. **Un `<button>` no**: el navegador
+lo mide por su contenido aunque se le ponga `display: flex`, así que dos seguidos
+se encogen y comparten línea. Es el mismo par de líneas que `.reserva` ya llevaba
+por el mismo motivo.
+
+**Por qué el arreglo va en los dos sitios.** El CSS tapa el síntoma para
+cualquier `<button class="fila-ir">` futuro, venga de donde venga. La función
+común elimina la causa: ya no hay dos maneras de escribir una fila que se pulsa,
+así que no puede volver a divergir. Un `@media` para 390 px habría escondido el
+problema hasta el siguiente tamaño de pantalla.
+
+---
+
+### D-102 · Fuera «Próximamente»
+
+**Decisión (2026-09-14):** se elimina de «Más» la sección «Próximamente» con sus
+dos líneas —«QR de las mesas y manuales» y «Avisar de los platos que llevan algo
+agotado»—, y con ella su CSS (`.futuro`).
+
+**Por qué:** era texto muerto. Dos renglones que no llevaban a ninguna parte,
+ocupando sitio en una herramienta que se usa de pie y con prisa. Una lista de
+promesas dentro de un panel de trabajo no informa: estorba. Lo que falta por
+construir vive en `docs/README.md`, que es donde se mira para saberlo.
+
+Las dos funcionalidades **siguen pendientes** y no se han tocado: no había nada
+de backend detrás, solo los dos textos.
+
+---
+
 ## Propuestas
 
 Ideas que **no** se han construido porque no están en el encargo. Anotadas aquí
@@ -2209,5 +2422,5 @@ meter un DNI en la base cambia las obligaciones de protección de datos del bar
 verlos). Eso se pregunta antes de escribirlo, no después.
 
 Si el cliente lo pide, lo razonable sería: campos aparte, visibles **solo para el
-dueño**, y un borrado automático a los cuatro años de la baja, que es lo que pide
-la normativa de registro de jornada.
+administrador**, y un borrado automático a los cuatro años de la baja, que es lo
+que pide la normativa de registro de jornada.

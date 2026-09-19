@@ -20,7 +20,7 @@
  *     que tecnica y se para.
  *
  * Cocina y empleado no llegan a esta pantalla: la regla de `productos` solo deja
- * actualizar a dueno y encargado. Crear si puede cualquiera, pero eso se hace
+ * actualizar al administrador. Crear si puede cualquiera, pero eso se hace
  * al vuelo desde «Apuntar una falta», con solo el nombre.
  */
 
@@ -29,7 +29,7 @@ import { enfocarAlta } from '../foco.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { interruptor } from '../piezas/interruptor.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
-import { esDueno, mantieneAlmacen } from '../sesion.js'
+import { esAdmin, mantieneAlmacen } from '../sesion.js'
 import { ir } from '../enrutador.js'
 import { cargarAlmacen, guardarProducto, borrarProducto } from '../datos.js'
 import { UBICACIONES, CATEGORIAS_ALMACEN, numero } from './almacen.js'
@@ -228,7 +228,7 @@ function formulario(contenedor, estado, original) {
           ]),
         ]),
 
-        esDueno() && original
+        esAdmin() && original
           ? el('div', { class: 'campo' }, [
             el('button', {
               type: 'button', class: 'btn btn--discreto', text: 'Eliminar producto',
@@ -268,7 +268,7 @@ function confirmarBorrado(estado, prod) {
       boton.disabled = false
       boton.textContent = 'Sí, eliminarlo'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede eliminar productos.'
+        ? 'Solo un administrador puede eliminar productos.'
         // Un producto que aparece en un recuento no se puede borrar: la
         // relacion de `recuento_lineas` no arrastra el borrado a proposito, y
         // asi un recuento cerrado sigue diciendo la verdad de lo que se conto.

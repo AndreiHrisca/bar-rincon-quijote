@@ -18,7 +18,7 @@ import { fallo, esqueletoFilas } from '../piezas/estados.js'
 import { nav } from '../piezas/nav.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
-import { esDueno, mantieneAlmacen } from '../sesion.js'
+import { esAdmin, mantieneAlmacen } from '../sesion.js'
 import { ir } from '../enrutador.js'
 import { cargarAlmacen, guardarProveedor, borrarProveedor } from '../datos.js'
 import { icono } from '/compartido/js/iconos.js'
@@ -293,7 +293,7 @@ function hojaProveedor(proveedor, estado, { alGuardar, alBorrar }) {
         el('span', { class: 'interruptor__palanca', 'aria-hidden': 'true' }),
       ]),
 
-      esDueno() && proveedor
+      esAdmin() && proveedor
         ? el('button', {
           type: 'button', class: 'btn btn--discreto btn--suelto', text: 'Eliminar proveedor',
           onclick: () => confirmarBorrado(proveedor, estado, alBorrar, reabrir),
@@ -325,7 +325,7 @@ function confirmarBorrado(proveedor, estado, alBorrar, alEcharseAtras) {
       boton.disabled = false
       boton.textContent = 'Sí, eliminarlo'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede eliminar proveedores.'
+        ? 'Solo un administrador puede eliminar proveedores.'
         : 'No hemos podido eliminarlo. Inténtalo otra vez.'
       error.hidden = false
     }

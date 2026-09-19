@@ -3,23 +3,27 @@
 // Roles — lo que una regla de coleccion no puede decir
 // ===========================================================================
 // Las reglas de PocketBase deciden POR REGISTRO ("¿puede este usuario tocar
-// esta fila?"), pero no POR CAMPO ("¿puede tocar ESTE campo de esta fila?").
-// Dos cosas del encargo caen justo en ese hueco (seccion 7) y se resuelven
-// aqui:
+// esta fila?"), pero no POR CAMPO ("¿puede tocar ESTE campo de esta fila?"). En
+// ese hueco cae una cosa, y es la mas importante de todas:
 //
-//   1. Cada cual puede editar su propia cuenta (cambiarse el nombre o la
-//      contrasena), pero NADIE se cambia el rol a si mismo. Sin esto, la regla
-//      `@request.auth.id = id` de users deja que un empleado se ascienda a
-//      dueno con una peticion PATCH de una linea.
+//   Cada cual puede editar su propia cuenta (cambiarse el nombre o la
+//   contrasena), pero NADIE SE CAMBIA EL ROL A SI MISMO. Sin esto, la regla
+//   `@request.auth.id = id` de users deja que un empleado se ascienda a
+//   administrador con una peticion PATCH de una linea. Es el agujero mas obvio
+//   de todo el sistema de permisos y no lo tapa ninguna regla.
 //
-//   2. El encargado mantiene la carta pero NO toca los precios. La regla de
-//      platos le deja actualizar el plato entero porque no sabe distinguir
-//      campos; aqui se le paran los dos precios y el interruptor de los
-//      ingredientes extra, que es lo mismo por otra puerta: enciende un recargo
-//      de 0,50 € por ingrediente sobre ese plato.
+// Esta comprobacion esta anunciada en los comentarios de las migraciones
+// 1756700100_usuarios_rol.js y 1757200000_rol_administrador.js, que remiten a
+// este fichero.
 //
-// Las dos comprobaciones estan anunciadas en los comentarios de las migraciones
-// 1756700100_usuarios_rol.js y 1756700400_carta.js, que remiten a este fichero.
+// LO QUE YA NO ESTA AQUI: hasta la migracion 1757200000 habia un segundo hook
+// que le impedia al «encargado» tocar los precios de la carta. El rol
+// «encargado» ya no existe —ahora hay administrador y empleado, y nada mas— y
+// el encargo nuevo pide expresamente que el empleado pueda modificar los platos
+// existentes, precio incluido. Un plato que se puede editar entero menos el
+// numero mas importante es una regla que se explica sola en una discusion pero
+// no en una pantalla. Quien cambie un precio queda apuntado en «Actividad» con
+// el antes y el despues, que es la garantia que de verdad hacia falta.
 //
 // OJO CON EL ALCANCE DE LOS HOOKS (ver DECISIONES.md, D-22): cada handler corre
 // en un runtime de JavaScript aislado. Nada de lo que se declare en el nivel
@@ -28,7 +32,7 @@
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
-// El rol solo lo cambia el dueno, y nunca sobre si mismo
+// El rol solo lo cambia el administrador, y nunca sobre si mismo
 // ---------------------------------------------------------------------------
 onRecordUpdateRequest((e) => {
   // El panel de administracion de PocketBase (superusuario) queda fuera: es la
@@ -43,49 +47,26 @@ onRecordUpdateRequest((e) => {
   if (rolNuevo === rolAntes) return e.next()
 
   const quien = e.auth
-  if (!quien || quien.getString('rol') !== 'dueno') {
-    throw new ForbiddenError('Solo el dueño puede cambiar el rol de una cuenta.')
+  if (!quien || quien.getString('rol') !== 'admin') {
+    throw new ForbiddenError('Solo un administrador puede cambiar el rol de una cuenta.')
   }
 
-  // Un dueno tampoco se degrada a si mismo. No es paternalismo: si el unico
-  // dueno se pone "empleado" por error, ya no queda nadie que pueda deshacerlo
-  // y hay que entrar por el panel de administracion de PocketBase.
+  // Un administrador tampoco se degrada a si mismo. No es paternalismo: si el
+  // unico administrador se pone "empleado" por error, ya no queda nadie que
+  // pueda deshacerlo y hay que entrar por el panel de administracion de
+  // PocketBase.
   if (quien.id === e.record.id) {
-    throw new ForbiddenError('No puedes cambiarte el rol a ti mismo. Que te lo cambie otro dueño.')
+    throw new ForbiddenError('No puedes cambiarte el rol a ti mismo. Que te lo cambie otro administrador.')
   }
 
+  // Queda tambien en «Actividad», con el antes y el despues, por
+  // pb_hooks/actividad.pb.js. Esta linea del diario del servidor se mantiene
+  // aparte a proposito: un cambio de rol es lo que hay que poder rastrear el
+  // dia que la base este rara, y el diario del servidor no lo puede borrar
+  // nadie desde dentro de la aplicacion.
   e.app.logger().info('Cambio de rol',
     'cuenta', e.record.getString('email'), 'de', rolAntes, 'a', rolNuevo,
     'por', quien.getString('email'))
 
   e.next()
 }, 'users')
-
-// ---------------------------------------------------------------------------
-// El encargado no toca los precios
-// ---------------------------------------------------------------------------
-onRecordUpdateRequest((e) => {
-  if (e.hasSuperuserAuth()) return e.next()
-
-  const quien = e.auth
-  if (!quien || quien.getString('rol') !== 'encargado') return e.next()
-
-  const antes = e.record.original()
-  const cambiados = ['precio_barra', 'precio_terraza'].filter(
-    (campo) => Number(e.record.get(campo) || 0) !== Number(antes.get(campo) || 0))
-
-  if (cambiados.length) {
-    throw new ForbiddenError('Los precios de la carta solo los cambia el dueño.')
-  }
-
-  // El interruptor de ingredientes extra decide si a ese plato se le pueden
-  // cobrar 0,50 € de mas por ingrediente. Es una decision de precio, asi que va
-  // por el mismo camino que los dos de arriba. Se compara aparte y con getBool
-  // porque es un booleano: pasarlo por Number() funcionaria hoy, pero no dice
-  // lo que es.
-  if (e.record.getBool('admite_extras') !== antes.getBool('admite_extras')) {
-    throw new ForbiddenError('Los ingredientes extra son un precio: solo los cambia el dueño.')
-  }
-
-  e.next()
-}, 'platos')

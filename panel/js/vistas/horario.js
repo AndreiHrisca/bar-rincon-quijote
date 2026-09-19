@@ -19,7 +19,7 @@
  * semanal en ese rango de días y la portada enseña el motivo. Se pone y se
  * quita desde el móvil, que es donde está Santi cuando decide cerrar.
  *
- * Solo el dueño: lo impone la regla de la colección `ajustes`.
+ * Solo el administrador: lo impone la regla de la colección `ajustes`.
  */
 
 import { el, pintar } from '../dom.js'
@@ -100,7 +100,7 @@ export function hojaHorario(estado, alGuardar) {
       boton.disabled = false
       boton.textContent = 'Guardar'
       falla(err?.status === 403
-        ? 'Solo el dueño puede cambiar el horario.'
+        ? 'Solo un administrador puede cambiar el horario.'
         : 'No se ha podido guardar el horario.')
       console.warn('[quijote] horario:', err)
     }

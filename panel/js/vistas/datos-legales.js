@@ -9,15 +9,15 @@
  * fuente: es un dato del negocio, cambia si Santi cambia de forma jurídica, y
  * mientras no lo dé nadie puede inventárselo. Nacen vacíos (migración
  * 1756701500_ajustes_legales.js), la web omite la línea que no tenga dato y
- * «Más» se lo recuerda al dueño hasta que los ponga. Ver DECISIONES.md, D-92.
+ * «Más» se lo recuerda al administrador hasta que los ponga. Ver DECISIONES.md, D-92.
  *
  * EL PLAZO DE RESERVAS NO ES DECORATIVO: es el mismo número que usa el borrado
  * automático de todas las madrugadas (pb_hooks/retencion.pb.js) y el mismo que
  * la política de privacidad le promete al cliente. Se cambia aquí y cambian las
  * tres cosas a la vez.
  *
- * Solo el dueño. Lo decide la regla de la colección `ajustes` (migración
- * 1756701100_ajustes_dueno.js); aquí solo se evita enseñar un formulario que va
+ * Solo el administrador. Lo decide la regla de la colección `ajustes`
+ * (migración 1757200000_rol_administrador.js); aquí solo se evita un formulario que va
  * a devolver un 403.
  */
 
@@ -80,7 +80,7 @@ export function hojaDatosLegales(estado, alGuardar) {
       boton.disabled = false
       boton.textContent = 'Guardar'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede cambiar estos datos.'
+        ? 'Solo un administrador puede cambiar estos datos.'
         : err?.response?.data?.correo_contacto
           ? 'Ese correo no parece un correo.'
           : (err?.response?.message || 'No hemos podido guardarlos.')

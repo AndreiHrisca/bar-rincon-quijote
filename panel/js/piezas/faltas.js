@@ -15,7 +15,7 @@
  *
  *   - RESOLVER ES UN TOQUE, y lo puede dar cualquiera del equipo. Si alguien
  *     baja al sotano y sube la harina, la marca quien pasa por ahi, no hay que
- *     buscar al encargado.
+ *     buscar a un administrador.
  *
  * Quien apunto el aviso se ensena, pero NO se cuenta ni se ordena por persona
  * (seccion 12: nada de rankings). Esta para poder preguntar «oye, esto que

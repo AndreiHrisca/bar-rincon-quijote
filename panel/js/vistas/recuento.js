@@ -23,8 +23,8 @@
  *     obliga a llevar un orden. Siempre falta una caja que está detrás de otra.
  *
  * Contar lo hace cualquiera del equipo: baja al almacén quien baja. CERRAR el
- * recuento —que es lo que congela la lista de pedido— solo el dueño y el
- * encargado, y eso lo comprueba el servidor (pb_hooks/almacen.pb.js).
+ * recuento —que es lo que congela la lista de pedido— solo el administrador, y
+ * eso lo comprueba el servidor (pb_hooks/almacen.pb.js).
  */
 
 import { el, pintar } from '../dom.js'
@@ -294,7 +294,7 @@ function filaCuenta(producto, acc) {
 function pieCerrar(vista, acc) {
   if (!mantieneAlmacen()) {
     return el('p', { class: 'parrafo parrafo--apagado', style: 'margin-top: var(--sp-4)', text:
-      'Cuando acabes, avisa: el recuento lo cierra el encargado o el dueño, y al cerrarlo '
+      'Cuando acabes, avisa: el recuento lo cierra un administrador, y al cerrarlo '
       + 'sale la lista de pedido.' })
   }
 
@@ -332,7 +332,7 @@ function hojaCerrar(vista, acc) {
       boton.disabled = false
       boton.textContent = 'Cerrar y ver el pedido'
       error.textContent = err?.status === 403
-        ? 'El recuento lo cierra el encargado o el dueño.'
+        ? 'El recuento lo cierra un administrador.'
         : (err?.message || err?.response?.message || 'No hemos podido cerrarlo.')
       error.hidden = false
     }

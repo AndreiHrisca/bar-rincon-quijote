@@ -1272,8 +1272,121 @@ body.sin-scroll { overflow: hidden; }
 .dia-horario__horas .entrada { width: 92px; padding-inline: var(--sp-2); }
 .dia-horario__cerrado { flex: none; font-size: var(--fs-small); color: var(--tenue); }
 
-.futuro { padding: var(--sp-3) var(--sp-4); }
-.futuro__texto { font-size: var(--fs-body); line-height: var(--lh-tight); color: var(--apagado-2); }
+/* ==========================================================================
+   ACTIVIDAD: EL DIARIO DEL PANEL
+   ==========================================================================
+   La misma forma que una reserva —hora a la izquierda, contenido a la
+   derecha— porque es el mismo gesto de lectura: se busca por la hora y se lee
+   hacia dentro. Lo unico que cambia es que aqui la hora es mas pequena: en una
+   reserva la hora ES el dato; aqui es la referencia y el dato es la frase. */
+
+.apunte {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-3) var(--sp-4);
+  /* Como .reserva y por lo mismo: la fila tambien se pinta como <button>
+     cuando tiene detalle, y un boton se encoge si no se le dice esto. */
+  width: 100%;
+  text-align: left;
+  color: inherit;
+}
+.apunte--pulsable { cursor: pointer; }
+.apunte--pulsable:hover { background: var(--crema-2); }
+
+.apunte__hora {
+  font-family: var(--letra-titulo);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--apagado);
+  width: 42px;
+  flex: none;
+  /* Alinea con la primera linea del texto, que es mas alta. */
+  padding-top: 1px;
+}
+
+.apunte__cuerpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.apunte__quien {
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--granate);
+  letter-spacing: var(--track-rotulo);
+}
+/* overflow-wrap y no word-break: parte una palabra larguisima solo si no cabe
+   de ninguna forma, en vez de cortar por donde caiga. El nombre de un plato
+   puede ser «Revuelto de setas con gulas y gambas». */
+.apunte__que {
+  font-size: var(--fs-body);
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+}
+.apunte__mas { font-size: var(--fs-caption); color: var(--tenue); }
+
+.apunte__flecha {
+  flex: none;
+  color: var(--arrastre);
+  font-size: var(--fs-title);
+  line-height: 1;
+  align-self: center;
+}
+
+/* Entrar y salir son de otra naturaleza: no cambian nada del bar. Se apagan un
+   poco para que no compitan con los cambios de verdad. */
+.apunte--entrar .apunte__que,
+.apunte--salir .apunte__que { color: var(--apagado); }
+.apunte--entrar-fallido .apunte__quien,
+.apunte--entrar-fallido .apunte__que { color: var(--granate); }
+.apunte--borrar .apunte__que { font-weight: 500; }
+
+/* --- «Hora  20:00 → 21:00» ------------------------------------------------
+   En columna y no en una sola linea: en un movil de 320 px, «Precio terraza»
+   con sus dos valores al lado no cabe, y partirlo por la flecha deja el
+   «despues» solo en la linea de abajo sin decir de que es. */
+.apunte__cambios { display: flex; flex-direction: column; gap: 2px; }
+
+.cambio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-small);
+}
+.cambio--hoja { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-body); }
+
+.cambio__campo { color: var(--apagado); flex: none; }
+.cambio__valores {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.cambio__antes { color: var(--tenue); text-decoration: line-through; overflow-wrap: anywhere; }
+.cambio__flecha { color: var(--arrastre); flex: none; }
+.cambio__despues { font-weight: 500; overflow-wrap: anywhere; }
+
+/* Los tres filtros. En movil van uno debajo de otro; en cuanto hay sitio, en
+   fila, que es donde se leen de un vistazo. */
+.filtros {
+  display: grid;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  border-bottom: var(--borde);
+}
+/* El .campo trae su propio margen de arriba para los formularios; aqui lo pone
+   la rejilla y sobraria en el primero. */
+.filtros .campo { margin-top: 0; }
+
+@media (min-width: 600px) {
+  .filtros { grid-template-columns: repeat(3, 1fr); align-items: end; }
+  .filtros > .btn { grid-column: 1 / -1; justify-self: start; width: auto; }
+}
 
 .pie-nota {
   text-align: center;
@@ -1372,7 +1485,7 @@ body.sin-scroll { overflow: hidden; }
   padding: var(--sp-2) 0;
   min-height: var(--toque-min);
 }
-/* A cocina y a empleado la fila no se les abre: la regla de la coleccion no les
+/* A un empleado la fila no se le abre: la regla de la coleccion no le
    deja actualizar. Misma linea, sin cursor de mano ni foco. */
 .fila-prod__abrir--quieta { cursor: default; }
 
@@ -1411,6 +1524,16 @@ body.sin-scroll { overflow: hidden; }
   padding: var(--sp-3) var(--sp-4);
   min-height: var(--toque-min);
   color: inherit;
+  /* LAS DOS LINEAS QUE SIGUEN SON PARA LOS <button>, y no sobran.
+     Un <a> con display:flex dentro de un bloque ocupa la fila entera sin mas,
+     pero un <button> no: el navegador lo mide por su contenido aunque se le
+     ponga display:flex, asi que dos botones seguidos se encogen y se apretan
+     uno al lado del otro en la misma linea. Es justo lo que le pasaba a
+     «Horario del bar» y «Datos legales» en «Más»: parecian dos tarjetas
+     estrechas en vez de dos filas. Es el mismo par de lineas que ya lleva
+     .reserva, que tiene el mismo problema por el mismo motivo. */
+  width: 100%;
+  text-align: left;
 }
 .fila-ir:hover { background: var(--crema-2); }
 .fila-ir__cuerpo { flex: 1; min-width: 0; }
@@ -2056,7 +2179,7 @@ body.sin-scroll { overflow: hidden; }
   letter-spacing: var(--track-rotulo);
 }
 
-/* «tú» al lado del nombre en la lista de cuentas: sin esto, el dueño no sabe
+/* «tú» al lado del nombre en la lista de cuentas: sin esto, quien mira no sabe
    cuál de las cuentas es la suya y acaba cambiándose el rol sin querer. */
 .marca-tu {
   margin-left: var(--sp-2);

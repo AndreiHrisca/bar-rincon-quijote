@@ -12,7 +12,7 @@
  *  1. Los datos del titular (razon social, NIF, domicilio fiscal y correo de
  *     contacto) salen de `ajustes`, que los rellena Santi desde el panel. Si
  *     falta alguno, esa linea NO se pinta: un aviso legal con un NIF inventado
- *     es peor que uno incompleto. El panel se lo recuerda al dueno mientras
+ *     es peor que uno incompleto. El panel se lo recuerda al administrador mientras
  *     falten (panel/js/vistas/mas.js).
  *
  *  2. El plazo de conservacion de las reservas se lee de
@@ -204,7 +204,7 @@ function privacidad({ bar, titular, nif, contacto, meses }) {
         titulo: 'Quién más los ve',
         parrafos: [
           'Nadie fuera del bar. Los datos están en un servidor propio, en Europa, '
-          + 'y solo entran el dueño y el personal con cuenta en el panel de gestión. '
+          + 'y solo entra el personal del bar con cuenta en el panel de gestión. '
           + 'No hay empresas de marketing, ni redes sociales, ni servicios de '
           + 'analítica de por medio. No se envían datos fuera de la Unión Europea.',
           'Tampoco tomamos ninguna decisión automática sobre ti: una reserva la '

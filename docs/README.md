@@ -105,33 +105,34 @@ docker exec -w /pb quijote-pocketbase pocketbase demo --dir=/pb/pb_data
 > lanzarlo borra lo anterior y lo regenera. **Nunca contra producción.**
 
 Desde la fase 5 el panel pide usuario y contraseña, así que `demo` crea también
-**una cuenta por rol**. Sirven para probar qué ve cada uno:
+**cuentas de los dos roles**: una que administra y tres del turno, que es como
+es un bar de verdad. Sirven para probar qué ve cada uno:
 
 | Usuario | Rol | Correo (también vale para entrar) |
 |---|---|---|
-| `santi` | dueño | `santi@ejemplo.invalid` |
-| `marisa` | encargado | `marisa@ejemplo.invalid` |
-| `kevin` | cocina | `kevin@ejemplo.invalid` |
+| `santi` | administrador | `santi@ejemplo.invalid` |
+| `marisa` | empleado | `marisa@ejemplo.invalid` |
+| `kevin` | empleado | `kevin@ejemplo.invalid` |
 | `lucia` | empleado | `lucia@ejemplo.invalid` |
 
 La contraseña de las cuatro es `demo-2026-quijote`. El dominio `.invalid` está
 reservado por norma y no existe: no se le puede escribir a nadie por error.
 
 > Si la base ya tiene una cuenta de verdad con uno de esos nombres —pasa al
-> probar sobre una copia de la de producción, donde `santi` es la cuenta del
-> dueño—, la de mentira se crea como `santi-demo` y el comando lo dice. **La
+> probar sobre una copia de la de producción, donde `santi` es una cuenta
+> real—, la de mentira se crea como `santi-demo` y el comando lo dice. **La
 > cuenta de verdad no se toca nunca.**
 
 **La primera cuenta de producción** la crea el superusuario desde `/_/`, o así:
 
 ```bash
 docker exec quijote-pocketbase pocketbase superuser upsert tu@correo.es 'clave-larga'
-# y desde /_/ , en la colección "users", una cuenta con rol = dueno
+# y desde /_/ , en la colección "users", una cuenta con rol = admin
 ```
 
 A partir de ahí, **las demás cuentas se crean desde el panel**: Personal → El
-equipo → Cuentas de acceso, con el `+`. Solo el dueño. El correo es opcional: se
-entra con el nombre de usuario (`DECISIONES.md`, D-72).
+equipo → Cuentas de acceso, con el `+`. Solo el administrador. El correo es
+opcional: se entra con el nombre de usuario (`DECISIONES.md`, D-72).
 
 ### El panel
 
@@ -147,18 +148,19 @@ Se entra con usuario y contraseña; vale el correo o el nombre de usuario.
 | **Más** | Con qué cuenta se ha entrado, el botón de salir y la puerta de los eventos, las estadísticas y el almacén. |
 | **Eventos** | Cuelga de «Más». El menú navideño, los vermús y las celebraciones que se anuncian en la web. Los pasados no se borran: sirven de borrador para el año que viene. |
 | **La carta en números** | Cuelga de «Más». Escaneos del QR por día, platos más mirados y lo que se busca y no está. Consultas de la carta, **no ventas**. |
-| **Datos legales** | Cuelga de «Más», solo el dueño. Quién figura como titular de la web y cuántos meses se guardan las reservas. |
+| **Datos legales** | Cuelga de «Más», solo el administrador. Quién figura como titular de la web y cuántos meses se guardan las reservas. |
 | **Almacén** | Cuelga de «Más». Las faltas apuntadas arriba, el catálogo agrupado por ubicación y los proveedores al final. |
 | **Apuntar una falta** | Dos toques: se toca el producto y se dice si queda poco o si se ha acabado. La usa todo el equipo. |
 | **Recuento** | El recorrido del almacén con las cantidades. **Funciona sin cobertura**: lo tecleado se guarda en el móvil y se manda solo. |
 | **Lista de pedido** | Lo que sale del recuento, agrupado por proveedor y ordenado por quién reparte antes. Se copia como texto para WhatsApp. |
 | **Fichajes** | Cuelga de Personal. Los turnos sin cerrar arriba del todo, lo fichado estos días por jornadas y el resumen del mes. El informe se descarga como CSV. |
 | **El equipo** | Cuelga de Personal. Las fichas: nombre, puesto, desde cuándo, horas contratadas, teléfono y con qué cuenta entra cada cual al panel. |
-| **Cuentas** | Cuelga de «El equipo». Quién puede entrar al panel, con qué usuario y qué puede hacer. Las crea y las borra el dueño. |
+| **Cuentas** | Cuelga de «El equipo». Quién puede entrar al panel, con qué usuario y qué puede hacer. Las crea y las borra el administrador. |
+| **Actividad** | Cuelga de «Más», solo el administrador. Quién ha hecho cada cambio en el panel, con el antes y el después. Filtros por persona, por tipo de cosa y por día. |
 
 Lo que cada rol ve y puede es **lo mismo** que dicen las reglas del servidor: a
-`cocina` y `empleado` no se les pintan ni el botón de reserva a mano ni el
-engranaje de ajustes, porque tampoco se los dejaría usar la API.
+un `empleado` no se le pinta el engranaje de ajustes ni la entrada de
+«Actividad», porque tampoco se los dejaría usar la API.
 
 **Tocar una reserva** abre su ficha: teléfono con enlace para llamar, código,
 notas y las cuatro pastillas de estado, que guardan al momento. Cancelar
@@ -187,13 +189,14 @@ otro toque.
   antes de subirla, así que da igual el tamaño que tenga (y así entran también
   las fotos HEIC de un iPhone, que la colección no aceptaría tal cual).
 - **Los alérgenos** son los 14 obligatorios por ley, como etiquetas que se tocan.
-- **Eliminar un plato** solo lo hace el dueño y pide confirmación. Casi nunca es
-  lo que se quiere: para un plato que se ha acabado, el interruptor.
+- **Eliminar un plato** solo lo hace el administrador y pide confirmación. Casi
+  nunca es lo que se quiere: para un plato que se ha acabado, el interruptor.
 
-Al **encargado** los dos precios le salen bloqueados al editar (sí los pone al
-crear el plato, que sin precio no se puede guardar). A **cocina** y **empleado**
-la carta les sale entera pero de solo lectura: sin interruptores, sin asideros y
-sin el `+`.
+**La carta la mantiene todo el equipo**, precios incluidos: es lo que se hace a
+diario y un empleado que no puede corregir una descripción acaba avisando por
+WhatsApp a alguien que sí. La garantía no es el candado, es el rastro: cada
+cambio de precio queda en «Actividad» con el antes y el después
+(`DECISIONES.md`, D-99).
 
 #### El almacén, desde el panel
 
@@ -224,12 +227,13 @@ Lo que hay que saber del día a día:
 - **Quién apuntó cada falta** se ve, pero lo escribe el servidor desde la sesión,
   no el navegador. No se cuenta ni se ordena por persona: nada de rankings
   (sección 12 del encargo).
-- **El catálogo** —unidades, mínimos, proveedores, ubicaciones— solo lo tocan
-  dueño y encargado. A cocina y a empleado la lista les sale entera pero de solo
-  lectura, sin el `+` y sin filas que se abran.
+- **El catálogo** —unidades, mínimos, proveedores, ubicaciones— solo lo toca el
+  administrador. A un empleado la lista le sale entera pero de solo lectura, sin
+  el `+` y sin filas que se abran. Dar de alta un producto **al vuelo**, con solo
+  el nombre, sí lo hace cualquiera: es el gesto de la cocina.
 - **Un producto que ya no se compra** no se elimina: se apaga con «En uso». Así
   deja de salir en el recuento y en la lista de pedido, y los recuentos viejos
-  siguen cuadrando. Eliminar solo lo hace el dueño, y un producto que aparece en
+  siguen cuadrando. Eliminar solo lo hace el administrador, y un producto que aparece en
   algún recuento **no se puede borrar**: la base lo impide a propósito.
 - **La ubicación no es una etiqueta**: es el orden en que se camina el almacén, y
   es por donde se agrupa la lista y por donde irá el recuento.
@@ -260,7 +264,7 @@ requisito que manda en esa pantalla:
   saltar productos y volver.
 
 **Contar lo hace cualquiera** del equipo: baja al almacén quien baja. **Cerrar**
-—que es lo que congela la lista de pedido— solo el dueño y el encargado, y eso lo
+—que es lo que congela la lista de pedido— solo el administrador, y eso lo
 comprueba el servidor. Un recuento cerrado **se puede volver a abrir** para
 corregir; mientras está cerrado, lo contado no se toca, aunque la cantidad a
 pedir sí (D-59).
@@ -296,7 +300,7 @@ y, en granate, **el servicio que no cubre nadie** — se mide contra el horario 
 cocina de los ajustes, que es el único horario que el sistema conoce. Con `‹` y
 `›` se cambia de semana; hoy va marcado con un filo granate.
 
-- **Poner un turno** es el `+ Añadir turno` del día. Solo dueño y encargado.
+- **Poner un turno** es el `+ Añadir turno` del día. Solo el administrador.
 - Un turno que **acaba antes de empezar** es el de noche y cruza la medianoche:
   `19:00`–`02:30` son siete horas y media.
 - El panel **avisa pero no prohíbe** (D-27): si el turno se pisa con otro de esa
@@ -312,7 +316,7 @@ ese enlace se pone en la ficha del equipo.
 - **La hora la pone el servidor**, la de entrada y la de salida. El reloj del
   móvil se cambia en dos toques y un registro de jornada que se fía de él no
   vale (D-63).
-- **Nadie ficha por un compañero.** Dueño y encargado sí, y entonces queda
+- **Nadie ficha por un compañero.** El administrador sí, y entonces queda
   firmado quién lo hizo.
 - **No se ficha dos veces**: con un turno abierto, lo que toca es cerrarlo.
 
@@ -321,7 +325,7 @@ turno que alguien se dejó sin cerrar** un día que ya pasó. No suma horas mien
 siga abierto, así que es lo que rompe el informe del mes. Debajo van los días,
 del más reciente al más antiguo, y el resumen del mes en curso.
 
-- **Corregir una hora** solo lo hacen dueño y encargado, y queda firmado en el
+- **Corregir una hora** solo lo hace el administrador, y queda firmado en el
   fichaje (se ve un `✎` en la línea). Con el `+` se apunta a mano el fichaje de
   quien se dejó el móvil en casa.
 - **El informe del mes** es el `⇩` de la cabecera: se elige el mes, se ven las
@@ -336,7 +340,7 @@ por semana** del contrato, teléfono, notas y —lo que de verdad importa— **c
 cuenta entra esa persona al panel**. Ese enlace es lo que hace que cada cual vea
 SUS horas y las de nadie más.
 
-- Crea y elimina el **dueño**; el encargado edita las que hay.
+- Las crea, las edita y las elimina el **administrador**.
 - Quien ya no trabaja aquí **no se elimina**: se apaga «Trabaja aquí», y el
   servidor apunta la fecha de la baja (D-75). Si tiene horas fichadas, el
   servidor **ya no deja borrar la ficha**: se llevaría por delante su registro de
@@ -353,13 +357,13 @@ gestor). Enlazarlas se puede desde los dos lados, y desde la ficha se le puede
 - **Se entra con el nombre de usuario** —`santi`, `marisa`—, que es lo que dibuja
   la maqueta. El correo vale también, pero es **opcional**: el bar no manda
   correos, así que no hace falta inventarse uno para cada persona (D-72).
-- **Solo el dueño** crea cuentas, cambia roles y borra. El encargado ve la lista
-  porque la necesita para enlazar fichas.
-- **La contraseña y el correo los cambia el dueño** desde la cuenta, porque no
+- **Solo el administrador** crea cuentas, cambia roles y borra. Un empleado solo
+  se ve a sí mismo en esa lista.
+- **La contraseña y el correo los cambia el administrador** desde la cuenta, porque no
   hay correo saliente para un «he olvidado mi contraseña» (D-29 y D-69). La
   contraseña se ve mientras se escribe, para poder dictarla; las sesiones que
   hubiera abiertas se cierran al momento.
-- **Nadie borra su propia cuenta**, ni se borra la última de dueño: es la forma
+- **Nadie borra su propia cuenta**, ni se borra la última de administrador: es la forma
   más rápida de quedarse fuera del panel para siempre.
 
 Las horas **no se cuentan por persona más allá de esto**: nada de rankings ni de
@@ -373,14 +377,77 @@ en gris, lo que ya pasó.
 
 Se escriben desde el panel, en **Más → Eventos**: título, descripción, fecha (o
 tramo de fechas, para el menú navideño), hora, precio por persona, una imagen
-opcional y el interruptor de visible. Los crean y los editan el dueño y el
-encargado; borrarlos, solo el dueño.
+opcional y el interruptor de visible. Los crea, los edita y los borra el
+administrador: anunciar algo en la web es administrar el negocio, no trabajo del
+turno.
 
 **Los eventos pasados no se borran.** El menú navideño del año que viene se hace
 abriendo el de este, cambiándole las fechas y volviendo a encenderlo.
 
 En la pantalla pública, el precio va pegado al título («Menú navideño · 40,00 €»)
 y un evento sin precio no enseña ningún cero.
+
+### Actividad: quién ha hecho cada cambio
+
+Cuelga de «Más» → **Gestión**, y **solo la ve el administrador**. Es el diario
+del panel: una línea por cada cosa que alguien del equipo hace aquí dentro.
+
+```
+12:48   María
+        María confirmó la reserva de Laura Pérez
+        Estado   pendiente → confirmada
+
+12:48   María
+        María modificó la reserva de Laura Pérez
+        Personas   2 → 4
+        Hora       20:00 → 21:00
+
+12:20   Santi
+        Santi inició sesión
+```
+
+**Para qué está.** Para contestar «¿quién cambió el precio del cachopo?» y
+«¿quién canceló la mesa de los Ortega?» sin preguntar y sin tener que creerse la
+respuesta. La mitad de las veces la respuesta es «se tocó sin querer» y lo único
+que hace falta es saber **qué deshacer**.
+
+**Qué se apunta.** Prácticamente todo lo que se hace desde el panel: entrar,
+salir y los intentos de acceso fallidos cuando sabemos a quién iban dirigidos;
+reservas (crear, modificar, cambiar de estado, confirmar, cancelar, borrar);
+platos y categorías (crear, editar, precio, descripción, categoría, foto,
+alérgenos, quitar de la carta, borrar); eventos; productos y proveedores; faltas
+del almacén (apuntarlas, cambiarles la gravedad, resolverlas); recuentos; fichas
+del equipo; turnos; fichajes; cuentas y cambios de rol; y los ajustes del bar,
+que incluyen el horario y los datos legales.
+
+**Qué NO se apunta, a propósito:**
+
+- **Lo que hace la web pública.** Una reserva desde el móvil de un cliente llega
+  sin sesión y no deja línea: el diario es de las acciones del equipo. Lo que
+  hace la gente en la carta ya se cuenta, y sin identificar a nadie, en «La carta
+  en números».
+- **Lo que se hace desde `/_/`** con el superusuario de PocketBase. No es una
+  persona del negocio: es la válvula de escape para arreglar la base a mano, y
+  por ahí entran también las migraciones y las pruebas.
+- **Un guardado que no cambia nada.** El panel manda el registro entero en cada
+  PATCH; sin este filtro, abrir un plato y cerrarlo dejaría una línea.
+- **Contraseñas, hashes, tokens y los datos de contacto de un cliente.** Si el
+  teléfono de una reserva cambió, la línea dice que cambió, pero no a qué.
+
+**Quién firma cada línea lo dice el token, nunca el navegador.** Eso es lo que
+hace que el diario valga para algo: no hay forma de mandar una petición diciendo
+que la hizo otro.
+
+**Nadie escribe, corrige ni borra el diario**, tampoco el administrador. Las
+cuatro reglas de escritura de la colección están cerradas y las líneas las pone
+el servidor por dentro. Lo único que lo recorta es el borrado automático de
+madrugada, **con el mismo plazo que las reservas** (12 meses por defecto): una
+línea dice «Santi modificó la reserva de Marta García», y ahí está el nombre de
+una clienta. Si el diario durase más que la reserva, borrar la reserva no
+serviría de nada.
+
+**Los filtros** —la lupa de la cabecera— son por persona, por tipo de cosa y por
+día, y se combinan. La lista se trae de 40 en 40 con un «Ver más» al final.
 
 ### Textos legales
 
@@ -404,7 +471,7 @@ mismo número que la política de privacidad le promete al cliente (D-96).
 > proyecto no puede inventarse: **titular** (persona o sociedad), **NIF/CIF**,
 > **domicilio fiscal** y un **correo de contacto** para ejercer los derechos de
 > protección de datos. Mientras falten, esas líneas no se pintan y el panel se lo
-> recuerda al dueño con un aviso en «Más». Se ponen ahí mismo, en **Datos
+> recuerda al administrador con un aviso en «Más». Se ponen ahí mismo, en **Datos
 > legales**. Y conviene que la asesoría del bar lea los tres textos antes de
 > darlos por buenos: son una base honesta, no un dictamen (D-92).
 
@@ -530,21 +597,26 @@ Ninguna necesita nada instalado en el host: se ejecutan en contenedores. Las dos
   dos formas conocidas de borrar un día de más) y **los textos de los avisos**,
   incluida la propiedad de que un aviso que falla no puede tumbar la reserva que
   lo provocó.
-- **Reglas de acceso** (142): la carta se lee sin sesión; una reserva se puede
+- **Reglas de acceso** (169): la carta se lee sin sesión; una reserva se puede
   crear pero **no leer ni conociendo su ID**; el almacén nunca es público; los
   fichajes solo los ve quien debe; cada rol puede lo que le toca; nadie se
-  cambia el rol a sí mismo, el encargado no toca precios, cocina da de alta un
+  cambia el rol a sí mismo ni asciende a un compañero, un empleado da de alta un
   producto al vuelo pero no cambia el catálogo, nadie firma un aviso con el
   nombre de otro, **un plato sin precio no se descarga sin sesión aunque esté
   encendido**, el recuento lo cuenta cualquiera pero solo lo cierra quien pide, **nadie ficha por un compañero ni se pone su propia hora**, corregir
-  horas deja firma, solo el dueño toca las cuentas —crearlas, borrarlas y
+  horas deja firma, solo el administrador toca las cuentas —crearlas, borrarlas y
   cambiar contraseñas y correos—, nadie borra la suya propia y una ficha con
   horas fichadas no se puede borrar. Desde la fase 10, además: **nadie escribe
   métricas a mano** y la ruta que sí las cuenta solo acepta los tres tipos del
   encargo, suma en la fila del día en vez de crear otra, se traga las búsquedas
   recortadas y en minúsculas y **no cuenta la vista de un plato que no existe**;
-  las estadísticas son del dueño y del encargado; un evento apagado no se ve
-  desde la calle ni por su ID, cocina no crea eventos y solo el dueño los borra.
+  las estadísticas son del administrador; un evento apagado no se ve desde la
+  calle ni por su ID, y un empleado ni los crea ni los publica ni los borra. Y
+  desde el diario del panel: **nadie puede fabricarse una línea de actividad**,
+  ni corregirla ni borrarla —tampoco el administrador—, un empleado no la lee,
+  el diario **no guarda contraseñas ni teléfonos de clientes**, el acceso
+  correcto y el fallido quedan apuntados y **lo que hace la web pública no deja
+  línea**.
 - **Reservas** (65): que el **servidor** aplica las reglas aunque se le mande una
   petición a mano saltándose el formulario, y que **el panel se las salta a
   propósito** (D-27).
@@ -555,8 +627,8 @@ Las reservas arrancan **desactivadas** y con los tres aforos a **0**, a propósi
 un aforo inventado aceptaría mesas que no existen.
 
 Desde la fase 5 esto se hace **desde el panel**, sin tocar la base: entra como
-dueño, ve a **Reservas** y pulsa el engranaje de la cabecera. Solo lo ve el rol
-`dueno`. Los campos son estos:
+administrador, ve a **Reservas** y pulsa el engranaje de la cabecera. Solo lo ve
+el rol `admin`. Los campos son estos:
 
 | Campo | Qué es |
 |---|---|
@@ -707,16 +779,22 @@ personal y las métricas no salen nunca sin sesión.
 En `users`, además del rol, están el **nombre de usuario** con el que se entra
 al panel y el correo, que es opcional (`DECISIONES.md`, D-72).
 
-**Los cuatro roles** (campo `rol` en `users`):
+**Los dos roles** (campo `rol` en `users`):
 
 | Rol | Puede |
 |---|---|
-| `dueno` | Todo. |
-| `encargado` | Todo menos ajustes y precios. Hace y cierra recuentos. |
-| `cocina` | Marca faltas, ve el cuadrante y ficha. No toca carta, precios ni reservas. |
-| `empleado` | Ve el cuadrante y ficha. |
+| `admin` | Todo: ajustes, datos legales, cuentas y roles, equipo y cuadrante, almacén, eventos, estadísticas, actividad y todos los borrados. |
+| `empleado` | Reservas y carta enteras (ver, crear y modificar), apuntar y resolver faltas, dar de alta un producto al vuelo, fichar y ver **sus** horas. |
 
-Se escribe `dueno` sin eñe: el valor viaja dentro de reglas de acceso y en URLs.
+Eran cuatro —`dueno`, `encargado`, `cocina` y `empleado`— hasta la migración
+`1757200000_rol_administrador.js`. En la base solo había cuentas de `dueno` y
+una de `empleado`: los otros dos no los usó nadie nunca. Ver `DECISIONES.md`,
+D-98.
+
+Lo que un empleado **no** puede: crear, borrar ni cambiar el rol de una cuenta,
+tocar los ajustes o los datos legales, editar las fichas del equipo ni el
+cuadrante, mantener el catálogo del almacén, cerrar un recuento, publicar
+eventos, leer las estadísticas, ver la actividad del panel ni borrar nada.
 
 ### El diseño
 

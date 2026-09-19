@@ -237,8 +237,8 @@ export async function platosOcultos() {
  * Quien esta dentro ahora mismo: fichajes empezados y sin cerrar.
  *
  * Un campo de fecha vacio se filtra con = "" en PocketBase. Ojo, esta lista la
- * recorta ademas la regla de acceso de "fichajes": cocina y empleado solo ven
- * los suyos, asi que a ellos la tarjeta les sale con una sola linea. Es lo
+ * recorta ademas la regla de acceso de "fichajes": un empleado solo ve los
+ * suyos, asi que a el la tarjeta le sale con una sola linea. Es lo
  * correcto: las horas de los demas no son asunto suyo (seccion 12).
  */
 export async function enTurnoAhora() {
@@ -444,8 +444,8 @@ export async function borrarEmpleado(id) {
  * Las cuentas de acceso: las de la pantalla de Cuentas y las que se enlazan a
  * una ficha del equipo.
  *
- * Solo las ven dueno y encargado (regla de `users`); a los demas les sale
- * vacio y la ficha no ensena el selector. OJO CON EL CORREO: PocketBase tapa
+ * Solo las ve el administrador (regla de `users`); a un empleado le sale solo
+ * su propia fila y la ficha no ensena el selector. OJO CON EL CORREO: PocketBase tapa
  * el de una cuenta ajena salvo que este marcada `emailVisibility`, y ademas no
  * deja filtrar por el. Por eso las cuentas que crea el panel nacen con el
  * correo visible: si no, la lista de cuentas no podria decir de quien es cada
@@ -458,7 +458,7 @@ export async function cargarCuentas() {
 }
 
 /**
- * Crea una cuenta de acceso. Solo el dueno (createRule de `users`).
+ * Crea una cuenta de acceso. Solo el administrador (createRule de `users`).
  *
  * `verified` NO se manda: PocketBase no deja ponerlo a nadie que no sea
  * superusuario, y aqui no sirve para nada —no hay correo saliente que
@@ -486,11 +486,11 @@ export async function borrarCuenta(id) {
 }
 
 /**
- * Cambia la contrasena o el correo de una cuenta del equipo. Solo el dueno.
+ * Cambia la contrasena o el correo de una cuenta del equipo. Solo el administrador.
  *
  * Va por una ruta propia y no por un PATCH a `users` porque la API de
  * PocketBase no deja ninguna de las dos cosas: la contrasena exige
- * `oldPassword` —y el dueno justamente no la sabe, la persona la ha perdido— y
+ * `oldPassword` —y el administrador justamente no la sabe, la persona la ha perdido— y
  * el correo exige el circuito de confirmacion por correo, que aqui no existe.
  * Lo hace el servidor (pb_hooks/cuentas.pb.js), que comprueba el rol y lo deja
  * escrito en el diario.
@@ -539,8 +539,8 @@ export async function borrarTurno(id) {
  * guarda PocketBase. Con medianoche UTC, el turno de noche que entra a las
  * 00:30 caeria en el dia anterior y el informe del mes no cuadraria.
  *
- * La lista la recorta ademas la regla de acceso: cocina y empleado solo ven los
- * suyos (seccion 12).
+ * La lista la recorta ademas la regla de acceso: un empleado solo ve los suyos
+ * (seccion 12).
  */
 export async function fichajesEntre(desdeISO, hastaISO) {
   return pb.collection('fichajes').getFullList({
@@ -561,7 +561,7 @@ export async function fichajesAbiertos() {
  * La ficha de empleado ligada a la cuenta con la que se ha entrado, si la hay.
  *
  * Es lo que decide si sale el boton de fichar: una cuenta sin ficha —la del
- * gestor, o la del dueno que no esta en el cuadrante— no ficha, y el servidor
+ * gestor, o la del administrador que no esta en el cuadrante— no ficha, y el servidor
  * se lo rechazaria. Devuelve null si no la tiene.
  */
 export async function miFichaDeEmpleado() {
@@ -574,7 +574,7 @@ export async function miFichaDeEmpleado() {
 }
 
 /**
- * Apunta un fichaje con la hora escrita. Solo dueno y encargado: es como se
+ * Apunta un fichaje con la hora escrita. Solo el administrador: es como se
  * arregla el olvido de quien se dejo el movil en casa. Al resto, el servidor le
  * pone su hora (ficharEntrada).
  */
@@ -588,7 +588,7 @@ export async function crearFichaje(datos) {
  * NO se manda la hora ni, si es de uno mismo, el empleado: los pone el servidor
  * (pb_hooks/fichajes.pb.js). El reloj del movil se cambia en dos toques y un
  * registro de jornada que se fia de el no vale para nada. `empleado` solo se
- * manda cuando dueno o encargado fichan por otro.
+ * manda cuando el administrador ficha por otro.
  */
 export async function ficharEntrada(empleado = null) {
   return pb.collection('fichajes').create(empleado ? { empleado } : {})
@@ -598,8 +598,8 @@ export async function ficharEntrada(empleado = null) {
  * Cierra un fichaje abierto.
  *
  * La hora que se manda es la del navegador, pero al servidor solo le sirve de
- * pista: a quien no es dueno ni encargado se la sustituye por la suya. Se manda
- * igualmente para que dueno y encargado puedan cerrar a una hora concreta el
+ * pista: a quien no es administrador se la sustituye por la suya. Se manda
+ * igualmente para que el administrador pueda cerrar a una hora concreta el
  * turno que alguien se dejo abierto ayer.
  */
 export async function cerrarFichaje(id, salida = null) {
@@ -607,7 +607,7 @@ export async function cerrarFichaje(id, salida = null) {
 }
 
 /**
- * Corrige un fichaje ya cerrado (o reabre uno). Solo dueno y encargado; el
+ * Corrige un fichaje ya cerrado (o reabre uno). Solo el administrador; el
  * servidor firma quien lo hizo en `corregido_por`.
  */
 export async function corregirFichaje(id, datos) {
@@ -616,4 +616,42 @@ export async function corregirFichaje(id, datos) {
 
 export async function borrarFichaje(id) {
   return pb.collection('fichajes').delete(id)
+}
+
+// --- Actividad --------------------------------------------------------------
+
+/**
+ * Una pagina del diario del panel, lo ultimo primero.
+ *
+ * SE PIDE POR PAGINAS Y NO ENTERO, al reves que la carta o el almacen: esta
+ * tabla crece con cada gesto del turno y en un ano son decenas de miles de
+ * filas. La pantalla pide 40 y va trayendo mas segun se baja.
+ *
+ * Los tres filtros son los de la pantalla y se combinan con Y: empleado, tipo
+ * de cosa y dia. Se escriben con pb.filter() y parametros, como todo lo demas
+ * de este fichero.
+ *
+ * `expand` no se usa: el nombre de quien lo hizo ya va escrito en la propia
+ * fila (`actor_nombre`), que es lo que permite seguir leyendo el diario cuando
+ * la cuenta ya no existe.
+ */
+export async function cargarActividad({ pagina = 1, porPagina = 40, actor = '', recurso = '', dia = '' } = {}) {
+  const condiciones = []
+  const valores = {}
+
+  if (actor) { condiciones.push('actor = {:actor}'); valores.actor = actor }
+  if (recurso) { condiciones.push('recurso = {:recurso}'); valores.recurso = recurso }
+  if (dia) {
+    // `creado` es un instante, no un dia del calendario: se acota el dia de
+    // AQUI traducido a UTC, igual que los fichajes. Con medianoche UTC, lo que
+    // se hizo a las 00:30 caeria en el dia anterior.
+    condiciones.push('creado >= {:desde} && creado <= {:hasta}')
+    valores.desde = inicioDelDiaPB(dia)
+    valores.hasta = finDelDiaPB(dia)
+  }
+
+  return pb.collection('actividad').getList(pagina, porPagina, {
+    sort: '-creado',
+    filter: condiciones.length ? pb.filter(condiciones.join(' && '), valores) : '',
+  })
 }

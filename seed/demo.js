@@ -147,18 +147,20 @@ function generar(app) {
   // Cuentas de acceso al panel
   // =========================================================================
   // Desde la fase 5 el panel pide usuario y contrasena, asi que los datos de
-  // demostracion traen una cuenta POR ROL. Sin esto no hay forma de ver el
-  // panel lleno: la pantalla de acceso no deja pasar.
+  // demostracion traen una cuenta POR ROL —los dos que hay desde la migracion
+  // 1757200000_rol_administrador.js— y dos empleados, que es el caso normal:
+  // varias personas de turno y una sola que administra. Sin esto no hay forma
+  // de ver el panel lleno: la pantalla de acceso no deja pasar.
   //
   // TODAS SON FICTICIAS Y LA CONTRASENA ES PUBLICA. Estan en dominio
   // .invalid, que es un TLD reservado y no existe: no se le puede escribir a
   // nadie por error. En produccion las cuentas las crea Santi, y este
   // subcomando no se ejecuta alli.
   const CUENTAS = [
-    { usuario: 'santi',  correo: 'santi@ejemplo.invalid',  rol: 'dueno',     nombre: 'Santi',  empleado: 0 },
-    { usuario: 'marisa', correo: 'marisa@ejemplo.invalid', rol: 'encargado', nombre: 'Marisa', empleado: 1 },
-    { usuario: 'kevin',  correo: 'kevin@ejemplo.invalid',  rol: 'cocina',    nombre: 'Kevin',  empleado: 2 },
-    { usuario: 'lucia',  correo: 'lucia@ejemplo.invalid',  rol: 'empleado',  nombre: 'Lucia',  empleado: 3 },
+    { usuario: 'santi',  correo: 'santi@ejemplo.invalid',  rol: 'admin',    nombre: 'Santi',  empleado: 0 },
+    { usuario: 'marisa', correo: 'marisa@ejemplo.invalid', rol: 'empleado', nombre: 'Marisa', empleado: 1 },
+    { usuario: 'kevin',  correo: 'kevin@ejemplo.invalid',  rol: 'empleado', nombre: 'Kevin',  empleado: 2 },
+    { usuario: 'lucia',  correo: 'lucia@ejemplo.invalid',  rol: 'empleado', nombre: 'Lucia',  empleado: 3 },
   ]
   const CLAVE_DEMO = 'demo-2026-quijote'
 
@@ -172,7 +174,7 @@ function generar(app) {
 
     // EL NOMBRE DE USUARIO PUEDE ESTAR COGIDO POR UNA CUENTA DE VERDAD. Pasa en
     // cuanto se prueba esto sobre una copia de la base real: alli «santi» es la
-    // cuenta del dueno, con su contrasena, y no la de mentira. El indice unico
+    // cuenta de Santi, con su contrasena, y no la de mentira. El indice unico
     // de `usuario` hace que el demo reviente con «Value must be unique».
     //
     // NO SE BORRA la que hay: seria borrar la cuenta real de alguien por

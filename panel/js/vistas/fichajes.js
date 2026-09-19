@@ -11,7 +11,7 @@
  * vez al mes; esa linea se mira todos los dias.
  *
  * QUIEN VE QUE (seccion 12): la regla de la coleccion recorta la lista sola.
- * Dueno y encargado ven al equipo entero; cocina y empleado, solo lo suyo. Aqui
+ * El administrador ve al equipo entero; cada empleado, solo lo suyo. Aqui
  * no se filtra nada a mano: lo que llega es lo que se pinta.
  *
  * LAS HORAS SE SUMAN AQUI Y NO EN EL SERVIDOR (panel/js/horas.js). El servidor
@@ -25,7 +25,7 @@ import { nav } from '../piezas/nav.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
 import { ir } from '../enrutador.js'
-import { gestionaPersonal, esDueno } from '../sesion.js'
+import { gestionaPersonal, esAdmin } from '../sesion.js'
 import {
   minutosFichados, enHoras, horasPorEmpleado, tramoDeFichaje, resumenDeFila,
 } from '../horas.js'
@@ -315,7 +315,7 @@ function filasDelDia(delDia, nombres, esHoy, miFichaId, acc) {
     // esta señalando, y no tiene sentido preguntar cual de los dos.
     const suelto = suyos.find((f) => !f.salida) || null
     const enCurso = !!suelto && esHoy
-    // Corregir es de dueno y encargado; cerrar el propio turno de hoy lo puede
+    // Corregir es del administrador; cerrar el propio turno de hoy lo puede
     // hacer cualquiera, que es el boton de fichar la salida de toda la vida.
     const puede = !!suelto && (gestionaPersonal() || (enCurso && suelto.empleado === miFichaId))
 
@@ -392,7 +392,7 @@ function resumenDelMes(estado, vista) {
 }
 
 // ---------------------------------------------------------------------------
-// Apuntar y corregir a mano (dueño y encargado)
+// Apuntar y corregir a mano (solo el administrador)
 // ---------------------------------------------------------------------------
 
 /**
@@ -444,8 +444,8 @@ function hojaAMano(fichaje, estado, vista, { alGuardar, alBorrar = null }) {
     boton.textContent = 'Guardando…'
     try {
       if (esNuevo) {
-        // Se crea con la entrada escrita —el servidor deja escribirla a dueno y
-        // encargado— y, si tambien se ha puesto la salida, se cierra despues:
+        // Se crea con la entrada escrita —el servidor solo se la deja escribir
+        // al administrador— y, si tambien hay salida, se cierra despues:
         // al crear, el hook deja el fichaje abierto a proposito.
         const creado = await crearFichaje({ empleado: quien.value, entrada: dentro })
         if (fuera) await corregirFichaje(creado.id, { salida: fuera, nota_correccion: nota.value.trim() })
@@ -463,7 +463,7 @@ function hojaAMano(fichaje, estado, vista, { alGuardar, alBorrar = null }) {
       boton.disabled = false
       boton.textContent = esNuevo ? 'Apuntar' : 'Guardar'
       error.textContent = err?.status === 403
-        ? 'Las horas ya fichadas las corrige el encargado o el dueño.'
+        ? 'Las horas ya fichadas las corrige un administrador.'
         : (err?.response?.message || 'No hemos podido guardarlo.')
       error.hidden = false
     }
@@ -478,7 +478,7 @@ function hojaAMano(fichaje, estado, vista, { alGuardar, alBorrar = null }) {
       el('p', { class: 'parrafo parrafo--apagado', text:
         'La salida en blanco es un turno abierto: la persona sigue dentro.' }),
       campo('Por qué se toca', 'fi-nota', nota),
-      esDueno() && fichaje
+      esAdmin() && fichaje
         ? el('button', {
           type: 'button', class: 'btn btn--discreto btn--suelto', text: 'Eliminar el fichaje',
           onclick: () => confirmarBorrado(fichaje, nombre, alBorrar, reabrir),
@@ -508,7 +508,7 @@ function confirmarBorrado(fichaje, nombre, alBorrar, alEcharseAtras) {
       boton.disabled = false
       boton.textContent = 'Sí, eliminarlo'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede eliminar un fichaje.'
+        ? 'Solo un administrador puede eliminar un fichaje.'
         : 'No hemos podido eliminarlo.'
       error.hidden = false
     }

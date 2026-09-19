@@ -18,7 +18,7 @@
  */
 
 // Quien puede fichar por otro y corregir lo fichado (seccion 7).
-const MANDO = ['dueno', 'encargado']
+const MANDO = ['admin']
 
 function esMando(rol) {
   return MANDO.indexOf(String(rol || '')) !== -1
@@ -42,8 +42,8 @@ function empleadoQueFicha({ pedido, propio, rol }) {
   const quiere = String(pedido || '').trim()
   const mio = String(propio || '').trim()
 
-  // Dueno y encargado fichan por quien sea: son los que arreglan el olvido de
-  // ayer y los que apuntan al que se dejo el movil en casa.
+  // El administrador ficha por quien sea: es quien arregla el olvido de ayer y
+  // quien apunta al que se dejo el movil en casa.
   if (esMando(rol)) {
     const elegido = quiere || mio
     if (!elegido) {
@@ -67,7 +67,7 @@ function empleadoQueFicha({ pedido, propio, rol }) {
  * Cerrar un fichaje abierto —ponerle la salida a lo que estaba sin salida— lo
  * hace cada cual al irse a casa y no es corregir nada. Todo lo demas si lo es:
  * mover la hora de entrada, cambiar una salida que ya estaba puesta o volver a
- * abrir un fichaje cerrado. Eso solo lo hacen dueno y encargado, y queda
+ * abrir un fichaje cerrado. Eso solo lo hace el administrador, y queda
  * firmado en `corregido_por` (seccion 7).
  */
 function esCorreccion({ entradaAntes, salidaAntes, entradaAhora, salidaAhora }) {

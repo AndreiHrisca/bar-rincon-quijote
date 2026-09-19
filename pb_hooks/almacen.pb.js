@@ -6,7 +6,7 @@
 // motivo por el que "oculto desde" lo sella el servidor (D-36): se quedarian
 // sin poner justo el dia que hay lio en la cocina, que es cuando hacen falta.
 //
-//   1. `productos.sin_configurar`  La seccion 9.1 pide que quien esta en cocina
+//   1. `productos.sin_configurar`  La seccion 9.1 pide que quien esta en la cocina
 //      pueda dar de alta un producto AL VUELO, con solo el nombre. Ese producto
 //      queda marcado para que alguien lo termine, y la marca se levanta sola en
 //      cuanto no le falta nada.
@@ -23,7 +23,7 @@
 //
 //   4. `recuentos`                 Quien lo empieza, cuando, y sobre todo QUIEN
 //      PUEDE CERRARLO: cerrar es lo que congela la lista de pedido, y eso solo
-//      lo hacen dueno y encargado. Lo anuncia la migracion 1756700700.
+//      lo hace el administrador. Lo anuncia la migracion 1756700700.
 //
 //   5. `recuento_lineas`            Si hay que pedir y cuanto. Se calcula al
 //      guardar cada linea —para que la lista este hecha cuando se acaba de
@@ -226,7 +226,7 @@ onRecordCreateRequest((e) => {
 }, 'recuentos')
 
 // ---------------------------------------------------------------------------
-// Cerrar un recuento: solo dueno y encargado
+// Cerrar un recuento: solo el administrador
 // ---------------------------------------------------------------------------
 // Cerrar es lo que congela la lista de pedido y da el recuento por bueno. No es
 // lo mismo que contar: contar lo hace quien baja al almacen, cerrar lo hace
@@ -245,10 +245,10 @@ onRecordUpdateRequest((e) => {
 
   const quien = e.auth
   const rol = quien ? quien.getString('rol') : ''
-  if (rol !== 'dueno' && rol !== 'encargado') {
+  if (rol !== 'admin') {
     throw new ForbiddenError(estadoAhora === 'cerrado'
-      ? 'El recuento lo cierra el encargado o el dueño.'
-      : 'El recuento lo vuelve a abrir el encargado o el dueño.')
+      ? 'El recuento lo cierra un administrador.'
+      : 'El recuento lo vuelve a abrir un administrador.')
   }
 
   // Aqui SI es un instante, no un dia del calendario: interesa a que hora se
@@ -314,7 +314,7 @@ onRecordCreateRequest((e) => {
 // a mentir poco a poco y nadie sabria desde cuando.
 //
 // Para corregir una cantidad mal tecleada se reabre el recuento, que es una
-// accion con nombre y con dueno.
+// accion con nombre y con responsable.
 onRecordUpdateRequest((e) => {
   const A = require(`${__hooks}/lib/almacen.js`)
 

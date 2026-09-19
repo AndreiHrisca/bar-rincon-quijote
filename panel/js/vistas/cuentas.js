@@ -9,17 +9,18 @@
  *     turnos y sus horas. Puede haber fichas sin cuenta —quien no entra nunca
  *     al panel— y son perfectamente normales.
  *   - LA CUENTA es una llave: un nombre de usuario, una contraseña y un rol.
- *     Puede haber cuentas sin ficha: la del gestor, o la de un dueño que no
- *     esta en el cuadrante.
+ *     Puede haber cuentas sin ficha: la del gestor, o la de un administrador
+ *     que no esta en el cuadrante.
  *
  * Enlazarlas es lo que hace que cada cual vea SUS horas y las de nadie mas
  * (regla de `fichajes`: `empleado.usuario = @request.auth.id`), y el enlace se
  * puede poner desde los dos lados.
  *
- * SOLO EL DUEÑO. Crear cuentas, cambiar roles y borrarlas es la llave del
- * negocio entero: quien puede crear una cuenta de dueño puede hacerlo todo. El
- * encargado ve la lista —le hace falta para enlazar fichas— y nada mas. Lo dice
- * la regla de `users`, no solo esta pantalla.
+ * SOLO EL ADMINISTRADOR. Crear cuentas, cambiar roles y borrarlas es la llave
+ * del negocio entero: quien puede crear una cuenta de administrador puede
+ * hacerlo todo. Un empleado no ve esta pantalla siquiera: la regla de `users`
+ * solo le deja verse a si mismo, asi que la lista le sale con su propia fila.
+ * Lo dice la regla, no solo esta pantalla.
  */
 
 import { el, pintar } from '../dom.js'
@@ -28,7 +29,7 @@ import { nav } from '../piezas/nav.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
 import { ir } from '../enrutador.js'
-import { esDueno, usuario as sesionUsuario, NOMBRE_ROL } from '../sesion.js'
+import { esAdmin, usuario as sesionUsuario, NOMBRE_ROL } from '../sesion.js'
 import {
   cargarEquipo, cargarCuentas, crearCuenta, guardarCuenta, borrarCuenta,
   cambiarCuenta, guardarEmpleado,
@@ -36,11 +37,14 @@ import {
 import { icono } from '/compartido/js/iconos.js'
 
 // El orden es el de mando: es como se lee «quien es quien» de un vistazo.
+//
+// Son DOS y no cuatro desde la migracion 1757200000_rol_administrador.js. El
+// pie de cada uno dice lo que PUEDE, no lo que no puede: es lo que hay que
+// saber al elegir, y «todo menos ajustes, precios y cuentas» obligaba a
+// reconstruir de memoria lo que si.
 const ROLES = [
-  ['dueno', 'Dueño', 'Todo. Ajustes, precios, cuentas y borrar.'],
-  ['encargado', 'Encargado', 'Todo menos ajustes, precios y cuentas.'],
-  ['cocina', 'Cocina', 'Apunta faltas, ve el cuadrante y ficha. No toca carta ni reservas.'],
-  ['empleado', 'Empleado', 'Ve el cuadrante y ficha.'],
+  ['admin', 'Administrador', 'Todo: ajustes, cuentas, equipo, almacén, eventos y la actividad del panel.'],
+  ['empleado', 'Empleado', 'Reservas y carta enteras, apuntar y resolver faltas, fichar y ver sus horas.'],
 ]
 
 export async function cuentas(contenedor, estado) {
@@ -51,11 +55,11 @@ export async function cuentas(contenedor, estado) {
   }
 
   const acciones = {
-    nueva() { if (esDueno()) hojaCuenta(null, estado, vista, { alGuardar: recargar }) },
-    abrir(cuenta) { if (esDueno()) hojaCuenta(cuenta, estado, vista, { alGuardar: recargar }) },
+    nueva() { if (esAdmin()) hojaCuenta(null, estado, vista, { alGuardar: recargar }) },
+    abrir(cuenta) { if (esAdmin()) hojaCuenta(cuenta, estado, vista, { alGuardar: recargar }) },
     // Crear la cuenta de alguien que ya tiene ficha: se rellena con su nombre y
     // al guardar se enlazan las dos cosas.
-    nuevaPara(ficha) { if (esDueno()) hojaCuenta(null, estado, vista, { alGuardar: recargar }, ficha) },
+    nuevaPara(ficha) { if (esAdmin()) hojaCuenta(null, estado, vista, { alGuardar: recargar }, ficha) },
     recargar() { vista.cargando = true; vista.error = null; repintar(); recargar() },
   }
 
@@ -81,7 +85,7 @@ export async function cuentas(contenedor, estado) {
 function pantalla(estado, vista, acc) {
   return el('div', { class: 'pantalla' }, [
     cabecera('Cuentas', [
-      esDueno() ? { icono: 'anadir', titulo: 'Cuenta nueva', activo: true, alPulsar: acc.nueva } : null,
+      esAdmin() ? { icono: 'anadir', titulo: 'Cuenta nueva', activo: true, alPulsar: acc.nueva } : null,
     ], {
       volver: { titulo: 'Volver al equipo', alPulsar: () => ir('/personal/equipo') },
     }),
@@ -113,15 +117,15 @@ function listado(estado, vista, acc) {
       el('div', { class: 'filas' }, vista.cuentas.map((c) => fila(c, fichas, acc))),
     ]),
 
-    !esDueno()
+    !esAdmin()
       ? el('p', { class: 'parrafo parrafo--apagado', text:
-        'Las cuentas las crea y las cambia el dueño. Aquí las ves para saber a quién enlazar '
+        'Las cuentas las crea y las cambia un administrador. Aquí las ves para saber a quién enlazar '
         + 'cada ficha del equipo.' })
       : null,
 
     // Lo que de verdad se viene a arreglar aquí: alguien del equipo que no
     // puede entrar al panel. Se dice con nombres, no con un número.
-    sinCuenta.length && esDueno()
+    sinCuenta.length && esAdmin()
       ? [
         el('h2', { class: 'rotulo-seccion', text: 'Sin cuenta de acceso' }),
         el('section', { class: 'tarjeta' }, [
@@ -169,7 +173,7 @@ function fila(cuenta, fichas, acc) {
   ]
 
   return el('div', { class: 'fila-prod' }, [
-    esDueno()
+    esAdmin()
       ? el('button', { type: 'button', class: 'fila-prod__abrir', onclick: () => acc.abrir(cuenta) }, cuerpo)
       : el('div', { class: 'fila-prod__abrir fila-prod__abrir--quieta' }, cuerpo),
   ])
@@ -220,7 +224,7 @@ export function hojaCuenta(cuenta, estado, vista, { alGuardar }, paraFicha = nul
       })
     }))
     pieRol.textContent = yo
-      ? 'Tu propio rol no te lo puedes cambiar. Que te lo cambie otro dueño.'
+      ? 'Tu propio rol no te lo puedes cambiar. Que te lo cambie otro administrador.'
       : (ROLES.find(([v]) => v === local.rol)?.[2] || '')
   }
   pintarRoles()
@@ -306,7 +310,7 @@ export function hojaCuenta(cuenta, estado, vista, { alGuardar }, paraFicha = nul
         pieRol,
       ]),
 
-      esDueno() && cuenta && !yo
+      esAdmin() && cuenta && !yo
         ? el('button', {
           type: 'button', class: 'btn btn--discreto btn--suelto', text: 'Eliminar la cuenta',
           onclick: () => confirmarBorrado(cuenta, estado, alGuardar,
@@ -336,7 +340,7 @@ function sugerirUsuario(nombre) {
 }
 
 function mensaje(err) {
-  if (err?.status === 403) return 'Solo el dueño puede tocar las cuentas.'
+  if (err?.status === 403) return 'Solo un administrador puede tocar las cuentas.'
   const datos = err?.response?.data || {}
   if (datos.usuario) return 'Ese nombre de usuario ya lo tiene otra cuenta.'
   if (datos.email) return 'Ese correo ya lo tiene otra cuenta, o no es un correo.'

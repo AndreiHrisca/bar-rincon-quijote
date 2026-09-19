@@ -16,7 +16,7 @@
  *
  * Que hacer si algun dia tiene que poder cambiarlo Santi sin tocar codigo:
  * anadir `precio_ingrediente_extra` a la coleccion `ajustes` (que ya es de
- * lectura publica y de escritura solo del dueno) y dejar este valor como
+ * lectura publica y de escritura solo del administrador) y dejar este valor como
  * respaldo para cuando la carta se ve sin conexion. Hoy no hace falta.
  *
  * Ver DECISIONES.md, D-79.

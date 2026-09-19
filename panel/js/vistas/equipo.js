@@ -14,12 +14,12 @@
  *   - la ficha dice quien trabaja aqui y es la que llevan los turnos y los
  *     fichajes. Puede no tener cuenta: hay quien no entra nunca al panel.
  *   - la cuenta es una llave: usuario, contraseña y rol. Puede no tener ficha:
- *     el gestor, o un dueño que no esta en el cuadrante.
+ *     el gestor, o un administrador que no esta en el cuadrante.
  *
  * Enlazarlas es lo que hace que cada cual vea SUS horas y las de nadie mas
  * (regla de `fichajes`: `empleado.usuario = @request.auth.id`).
  *
- * QUIEN LA TOCA: el dueno crea y borra fichas; el encargado edita las que hay
+ * QUIEN LA TOCA: solo el administrador crea, edita y borra fichas
  * (reglas de `empleados`). Al resto la lista les sale entera pero quieta: saber
  * con quien se trabaja no es un secreto.
  *
@@ -36,7 +36,7 @@ import { cabecera } from '../piezas/cabecera.js'
 import { avatar } from '../piezas/avatar.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
 import { BASE, ir } from '../enrutador.js'
-import { esDueno, gestionaPersonal, NOMBRE_ROL } from '../sesion.js'
+import { esAdmin, gestionaPersonal, NOMBRE_ROL } from '../sesion.js'
 import { hojaCuenta } from './cuentas.js'
 import { diaDe, aFechaPB, fechaLarga, antiguedad, hoyISO } from '../fechas.js'
 import { enHoras } from '../horas.js'
@@ -85,7 +85,7 @@ export async function equipo(contenedor, estado) {
 
   function editar(empleado) {
     if (!gestionaPersonal()) return
-    if (!empleado && !esDueno()) return
+    if (!empleado && !esAdmin()) return
     hojaFicha(empleado, estado, vista, acciones)
   }
 
@@ -98,7 +98,7 @@ export async function equipo(contenedor, estado) {
 function pantalla(estado, vista, acc) {
   return el('div', { class: 'pantalla' }, [
     cabecera('El equipo', [
-      esDueno() ? { icono: 'anadir', titulo: 'Ficha nueva', activo: true, alPulsar: acc.nueva } : null,
+      esAdmin() ? { icono: 'anadir', titulo: 'Ficha nueva', activo: true, alPulsar: acc.nueva } : null,
     ], {
       volver: { titulo: 'Volver al cuadrante', alPulsar: () => ir('/personal') },
     }),
@@ -125,7 +125,7 @@ function listado(estado, vista, acc) {
   const gente = estado.equipo || []
   if (!gente.length) {
     return el('section', { class: 'tarjeta' }, [
-      el('p', { class: 'vacio', text: esDueno()
+      el('p', { class: 'vacio', text: esAdmin()
         ? 'Todavía no hay nadie. Con el «+» se crea la primera ficha.'
         : 'Todavía no hay ninguna ficha del equipo.' }),
     ])
@@ -164,8 +164,8 @@ function fila(empleado, vista, acc) {
     : [
       empleado.puesto || null,
       // El rol no se repite cuando se llama igual que el puesto: «Cocina ·
-      // Cocina · 2 años» es lo que pasa en un bar donde la persona de cocina
-      // tiene el rol cocina, que es casi siempre.
+      // Cocina · 2 años» es lo que pasaba cuando el rol se llamaba igual que el
+      // puesto; con dos roles ya no se repite, pero el puesto manda igual.
       nombreDeRol(cuenta, empleado) === (empleado.puesto || '').trim().toLowerCase()
         ? null
         : (cuenta ? NOMBRE_ROL[cuenta.rol] || cuenta.rol : (empleado.usuario ? 'Con cuenta' : 'Sin cuenta')),
@@ -210,9 +210,9 @@ function puertaCuentas(vista) {
         el('a', { class: 'fila-ir', href: `${BASE}/personal/cuentas` }, [
           el('span', { class: 'fila-ir__cuerpo' }, [
             el('span', { class: 'fila-ir__nombre', text: 'Cuentas de acceso' }),
-            el('span', { class: 'fila-ir__pie', text: esDueno()
+            el('span', { class: 'fila-ir__pie', text: esAdmin()
               ? `${cuantas} ${cuantas === 1 ? 'cuenta' : 'cuentas'}. Quién entra al panel, con qué usuario y qué puede hacer.`
-              : `${cuantas} ${cuantas === 1 ? 'cuenta' : 'cuentas'}. Las crea y las cambia el dueño.` }),
+              : `${cuantas} ${cuantas === 1 ? 'cuenta' : 'cuentas'}. Las crea y las cambia un administrador.` }),
           ]),
           icono('chevron', { clase: 'ic fila-ir__flecha' }),
         ]),
@@ -408,7 +408,7 @@ function hojaFicha(empleado, estado, vista, acc) {
         el('span', { class: 'interruptor__palanca', 'aria-hidden': 'true' }),
       ]),
 
-      esDueno() && empleado
+      esAdmin() && empleado
         ? el('button', {
           type: 'button', class: 'btn btn--discreto btn--suelto', text: 'Eliminar la ficha',
           onclick: () => confirmarBorrado(empleado, acc, reabrir),
@@ -460,7 +460,7 @@ function resumen(empleado) {
  * cuatro gestos para uno.
  */
 function botonesDeCuenta(empleado, cuenta, estado, vista, acc) {
-  if (!esDueno()) return null
+  if (!esAdmin()) return null
 
   // Al volver de la hoja de la cuenta se reabre la ficha CON LO QUE HAY EN EL
   // SERVIDOR, no con el objeto que se tenia al abrirla: si se acaba de crear la
@@ -513,7 +513,7 @@ function confirmarBorrado(empleado, acc, alEcharseAtras) {
       boton.disabled = false
       boton.textContent = 'Sí, eliminarla'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede eliminar una ficha.'
+        ? 'Solo un administrador puede eliminar una ficha.'
         : (err?.response?.message || 'No hemos podido eliminarla.')
       error.hidden = false
     }

@@ -16,13 +16,21 @@ const P = require('../../pb_hooks/lib/personal.js')
 
 // ===========================================================================
 describe('esMando', () => {
-  test('dueño y encargado mandan; cocina y empleado, no', () => {
-    assert.equal(P.esMando('dueno'), true)
-    assert.equal(P.esMando('encargado'), true)
-    assert.equal(P.esMando('cocina'), false)
+  test('manda el administrador; el empleado, no', () => {
+    assert.equal(P.esMando('admin'), true)
     assert.equal(P.esMando('empleado'), false)
     assert.equal(P.esMando(''), false)
     assert.equal(P.esMando(undefined), false)
+  })
+
+  test('los roles viejos ya no mandan', () => {
+    // Si una copia de seguridad antigua se restaurase sin pasar la migracion
+    // 1757200000_rol_administrador.js, un «dueno» no podria corregir horas.
+    // Es el error seguro: la migracion los convierte, y mientras tanto nadie
+    // gana permisos por tener un rol que ya no existe.
+    assert.equal(P.esMando('dueno'), false)
+    assert.equal(P.esMando('encargado'), false)
+    assert.equal(P.esMando('cocina'), false)
   })
 })
 
@@ -35,7 +43,7 @@ describe('empleadoQueFicha', () => {
   })
 
   test('pedir el propio explicitamente tambien vale', () => {
-    const r = P.empleadoQueFicha({ pedido: 'emp1', propio: 'emp1', rol: 'cocina' })
+    const r = P.empleadoQueFicha({ pedido: 'emp1', propio: 'emp1', rol: 'empleado' })
     assert.equal(r.empleado, 'emp1')
   })
 
@@ -49,19 +57,19 @@ describe('empleadoQueFicha', () => {
   })
 
   test('una cuenta sin ficha de empleado no ficha', () => {
-    const r = P.empleadoQueFicha({ pedido: '', propio: '', rol: 'cocina' })
+    const r = P.empleadoQueFicha({ pedido: '', propio: '', rol: 'empleado' })
     assert.equal(r.empleado, undefined)
     assert.match(r.error, /no está ligada/)
   })
 
-  test('el encargado SI ficha por otro: arregla el olvido de ayer', () => {
-    const r = P.empleadoQueFicha({ pedido: 'emp2', propio: 'emp1', rol: 'encargado' })
+  test('el administrador SI ficha por otro: arregla el olvido de ayer', () => {
+    const r = P.empleadoQueFicha({ pedido: 'emp2', propio: 'emp1', rol: 'admin' })
     assert.equal(r.empleado, 'emp2')
   })
 
-  test('el dueño sin ficha propia puede fichar por otro, pero no por nadie', () => {
-    assert.equal(P.empleadoQueFicha({ pedido: 'emp2', propio: '', rol: 'dueno' }).empleado, 'emp2')
-    assert.match(P.empleadoQueFicha({ pedido: '', propio: '', rol: 'dueno' }).error, /de quién/)
+  test('el administrador sin ficha propia ficha por otro, pero no por nadie', () => {
+    assert.equal(P.empleadoQueFicha({ pedido: 'emp2', propio: '', rol: 'admin' }).empleado, 'emp2')
+    assert.match(P.empleadoQueFicha({ pedido: '', propio: '', rol: 'admin' }).error, /de quién/)
   })
 })
 

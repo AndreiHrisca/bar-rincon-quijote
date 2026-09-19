@@ -78,16 +78,16 @@ cronAdd('recordatorio_recuento', '0 10 * * *', () => {
 // poder decir «esto se aviso el jueves». El dia que haya una pasarela, este
 // mismo punto la usa sin tocar el panel.
 //
-// Quien puede: los mismos que ponen el cuadrante (dueno y encargado). No es un
+// Quien puede: los mismos que ponen el cuadrante (el administrador). No es un
 // dato sensible, pero una ruta publica que escribe en el diario del servidor es
 // una forma barata de llenarlo de basura.
 routerAdd('POST', '/api/quijote/aviso-cuadrante', (e) => {
   const quien = e.auth
   // El superusuario entra: no tiene campo `rol` que comprobar. Mismo criterio
   // que en roles.pb.js y en la ruta de estadisticas.
-  const rol = e.hasSuperuserAuth() ? 'dueno' : (quien ? quien.getString('rol') : '')
-  if (!quien || (rol !== 'dueno' && rol !== 'encargado')) {
-    return e.json(403, { error: 'El cuadrante lo publican el dueño y el encargado.' })
+  const rol = e.hasSuperuserAuth() ? 'admin' : (quien ? quien.getString('rol') : '')
+  if (!quien || rol !== 'admin') {
+    return e.json(403, { error: 'El cuadrante lo publica el administrador.' })
   }
 
   const datos = new DynamicModel({ semana: '', turnos: 0, huecos: 0 })

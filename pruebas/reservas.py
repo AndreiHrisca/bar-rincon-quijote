@@ -292,7 +292,7 @@ for viejo_u in r.get('items', []):
 
 cod, r = peticion('POST', '/api/collections/users/records', {
     'email': CORREO_PANEL, 'password': CLAVE_PANEL, 'passwordConfirm': CLAVE_PANEL,
-    'rol': 'dueno', 'nombre': 'Prueba Panel', 'emailVisibility': False, 'verified': True,
+    'rol': 'admin', 'nombre': 'Prueba Panel', 'emailVisibility': False, 'verified': True,
 }, token=raiz)
 assert cod == 200, f'no se pudo crear la cuenta del panel: {cod} {r}'
 UID_PANEL = r['id']

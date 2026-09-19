@@ -108,7 +108,7 @@ function fallo(err, alReintentar) {
     el('div', { class: 'aviso__texto' }, [
       el('b', { text: sinPermiso ? 'Esta pantalla no es para tu cuenta' : 'No hemos podido cargar los números' }),
       el('span', { text: sinPermiso
-        ? 'Las estadísticas de la carta las ven el dueño y el encargado.'
+        ? 'Las estadísticas de la carta las ve el administrador.'
         : 'Comprueba la conexión y vuelve a intentarlo.' }),
       // Sin permiso no hay nada que reintentar: reintentar dara otro 403.
       sinPermiso ? null : el('button', {

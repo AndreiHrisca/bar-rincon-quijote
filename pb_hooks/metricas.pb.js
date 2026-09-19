@@ -164,9 +164,9 @@ routerAdd('GET', '/api/quijote/estadisticas', (e) => {
   // El superusuario entra: es la valvula de escape para mirar la base cuando
   // algo se tuerce, y no tiene campo `rol` que comprobar. Mismo criterio que en
   // pb_hooks/roles.pb.js.
-  const rol = e.hasSuperuserAuth() ? 'dueno' : quien.getString('rol')
-  if (rol !== 'dueno' && rol !== 'encargado') {
-    return e.json(403, { error: 'Las estadísticas de la carta son del dueño y del encargado.' })
+  const rol = e.hasSuperuserAuth() ? 'admin' : quien.getString('rol')
+  if (rol !== 'admin') {
+    return e.json(403, { error: 'Las estadísticas de la carta son del administrador.' })
   }
 
   const pedidos = parseInt(String(e.request.url.query().get('dias') || ''), 10)

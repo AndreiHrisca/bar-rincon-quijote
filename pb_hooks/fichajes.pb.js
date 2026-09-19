@@ -14,7 +14,7 @@
 //      llegado. Es el fraude que un registro de jornada tiene que impedir.
 //
 //   2. LA HORA LA PONE EL SERVIDOR, la de entrada y la de salida. El reloj del
-//      movil se cambia en dos toques. Dueno y encargado SI pueden escribir una
+//      movil se cambia en dos toques. El administrador SI puede escribir una
 //      hora a mano —para arreglar el olvido de ayer—, y por eso queda firmado
 //      quien lo hizo.
 //
@@ -23,7 +23,7 @@
 //      del mes y nadie sabe cual vale.
 //
 //   4. CORREGIR DEJA RASTRO. Mover una entrada, cambiar una salida ya puesta o
-//      reabrir un fichaje cerrado solo lo hacen dueno y encargado, y se firma en
+//      reabrir un fichaje cerrado solo lo hace el administrador, y se firma en
 //      `corregido_por` (seccion 7 del encargo). Cerrar el turno propio no es
 //      corregir: eso lo hace cada cual al irse a casa.
 //
@@ -73,7 +73,7 @@ onRecordCreateRequest((e) => {
   e.record.set('empleado', decidido.empleado)
 
   // La hora. Para quien ficha lo suyo, siempre la del servidor; el reloj del
-  // movil no vale como registro de jornada. Dueno y encargado pueden mandarla
+  // movil no vale como registro de jornada. El administrador puede mandarla
   // escrita, que es como se arregla el olvido de ayer.
   const enviado = e.requestInfo().body || {}
   const puedeEscribirHoras = P.esMando(rol)
@@ -136,7 +136,7 @@ onRecordUpdateRequest((e) => {
     //
     // Y LA HORA DE SALIDA LA PONE TAMBIEN EL SERVIDOR, por el mismo motivo que
     // la de entrada: si el reloj del movil valiera para cerrar, irse a las
-    // 22:00 y fichar la salida de las 02:00 seria un toque. Dueno y encargado
+    // 22:00 y fichar la salida de las 02:00 seria un toque. El administrador
     // si pueden escribirla, que es como se cierra el turno que alguien se dejo
     // abierto ayer.
     if (!P.esMando(rol) && e.record.getString('salida')) {
@@ -150,7 +150,7 @@ onRecordUpdateRequest((e) => {
   }
 
   if (!P.esMando(rol)) {
-    throw new ForbiddenError('Las horas ya fichadas las corrige el encargado o el dueño.')
+    throw new ForbiddenError('Las horas ya fichadas las corrige un administrador.')
   }
 
   // La firma sale de la sesion, no del navegador: es lo que permite preguntar

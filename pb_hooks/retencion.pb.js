@@ -69,3 +69,53 @@ cronAdd('borrar_reservas_caducadas', '15 4 * * *', () => {
   $app.logger().info('Reservas caducadas borradas',
     'cuantas', borradas, 'anteriores_a', frontera.slice(0, 10), 'meses', meses)
 })
+
+// ===========================================================================
+// Lo mismo para el diario del panel
+// ===========================================================================
+// «Actividad» crece con cada gesto del turno y nadie la va a limpiar a mano.
+// Sin esto, en cinco anos son cientos de miles de filas que solo hacen lenta la
+// pantalla que venian a servir.
+//
+// SE USA EL MISMO PLAZO QUE LAS RESERVAS, y no es por comodidad: una linea del
+// diario dice «Santi modificó la reserva de Marta García». Ahi esta el nombre
+// de una clienta. Si el diario durase mas que la reserva, borrar la reserva a
+// los doce meses no serviria de nada —el nombre seguiria aqui— y la promesa de
+// la politica de privacidad seria mentira por la puerta de atras.
+//
+// Corre a las 04:20, cinco minutos despues del borrado de reservas y diez antes
+// de la copia de seguridad, por el mismo motivo: que la copia del dia no
+// arrastre lo que acaba de caducar.
+cronAdd('borrar_actividad_caducada', '20 4 * * *', () => {
+  const R = require(`${__hooks}/lib/retencion.js`)
+
+  let meses = R.MESES_POR_DEFECTO
+  try {
+    const ajustes = $app.findFirstRecordByFilter('ajustes', 'id != ""')
+    const guardado = ajustes.getInt('meses_retencion_reservas')
+    if (guardado > 0) meses = guardado
+  } catch (err) {
+    // Base sin configurar todavia: se usa el plazo por defecto del encargo.
+  }
+
+  const frontera = R.fronteraDeRetencion(meses)
+
+  let borradas = 0
+  for (let tanda = 0; tanda < 20; tanda++) {
+    const viejas = $app.findRecordsByFilter('actividad', 'creado < {:frontera}', '', 500, 0, { frontera })
+    if (!viejas.length) break
+    for (const linea of viejas) {
+      try {
+        $app.delete(linea)
+        borradas++
+      } catch (err) {
+        $app.logger().warn('Línea de actividad que no se ha podido borrar',
+          'id', linea.id, 'error', String(err))
+      }
+    }
+  }
+
+  if (!borradas) return
+  $app.logger().info('Actividad caducada borrada',
+    'cuantas', borradas, 'anterior_a', frontera.slice(0, 10), 'meses', meses)
+})

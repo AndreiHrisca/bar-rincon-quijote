@@ -15,7 +15,7 @@
  * lo unico que rechaza el servidor es un turno que empieza y acaba a la misma
  * hora, porque eso no es un turno, es un error de tecleo.
  *
- * QUIEN LO TOCA: dueno y encargado (regla de la coleccion `turnos`). Al resto
+ * QUIEN LO TOCA: solo el administrador (regla de la coleccion `turnos`). Al resto
  * del equipo la semana les sale entera pero de solo lectura; verla es
  * justamente para lo que sirve.
  */

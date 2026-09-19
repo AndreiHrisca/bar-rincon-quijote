@@ -1,9 +1,10 @@
 /**
  * Ajustes de reservas
  * ---------------------------------------------------------------------------
- * El botón del engranaje de la cabecera. Solo lo ve el dueño, igual que la
- * regla de la colección "ajustes" (migración 1756701100_ajustes_dueno.js): un
- * encargado que sube el aforo del salón acepta mesas que no existen.
+ * El botón del engranaje de la cabecera. Solo lo ve el administrador, igual que
+ * la regla de la colección "ajustes" (migraciones 1756701100_ajustes_dueno.js y
+ * 1757200000_rol_administrador.js): quien sube el aforo del salón sin poder
+ * verlo acepta mesas que no existen.
  *
  * Aquí está lo que hace falta para PODER abrir las reservas por la web. Sin
  * esta pantalla, los aforos arrancan a cero —a propósito, para que nadie
@@ -53,7 +54,7 @@ export function ajustesReservas(estado, alGuardar) {
       boton.disabled = false
       boton.textContent = 'Guardar'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede cambiar los ajustes.'
+        ? 'Solo un administrador puede cambiar los ajustes.'
         : (err?.response?.message || 'No hemos podido guardar los ajustes.')
       error.hidden = false
     }

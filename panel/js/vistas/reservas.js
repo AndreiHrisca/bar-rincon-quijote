@@ -21,7 +21,7 @@ import { filaReserva, ESTADOS_VIVOS } from '../piezas/reserva.js'
 import { fichaReserva } from './ficha-reserva.js'
 import { formularioReserva } from './formulario-reserva.js'
 import { ajustesReservas } from './ajustes-reservas.js'
-import { gestionaReservas, esDueno } from '../sesion.js'
+import { gestionaReservas, esAdmin } from '../sesion.js'
 import { reservasEntre, buscarReservas } from '../datos.js'
 import {
   hoyISO, masDias, diaDe, diaCorto, numeroDeDia, diaLargo, conMayuscula,
@@ -98,7 +98,7 @@ function pantalla(vista, acc) {
   return el('div', { class: 'pantalla' }, [
     cabecera('Reservas', [
       { icono: 'buscar', titulo: 'Buscar una reserva', activo: vista.buscando, alPulsar: acc.alternarBusqueda },
-      esDueno() ? { icono: 'ajustes', titulo: 'Ajustes de reservas', alPulsar: acc.ajustes } : null,
+      esAdmin() ? { icono: 'ajustes', titulo: 'Ajustes de reservas', alPulsar: acc.ajustes } : null,
     ]),
 
     el('div', { class: 'pantalla__scroll' },

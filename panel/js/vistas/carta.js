@@ -21,7 +21,7 @@ import { nav } from '../piezas/nav.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { interruptor } from '../piezas/interruptor.js'
 import { hacerReordenable, asidero } from '../piezas/reordenar.js'
-import { rol } from '../sesion.js'
+import { gestionaCarta } from '../sesion.js'
 import { ir } from '../enrutador.js'
 import { cargarCarta, guardarPlato, guardarOrden } from '../datos.js'
 import { diaDe, diaRelativo } from '../fechas.js'
@@ -29,7 +29,7 @@ import { precio, precioOpcional } from '../formato.js'
 import { icono } from '/compartido/js/iconos.js'
 
 export function puedeEditarCarta() {
-  return rol() === 'dueno' || rol() === 'encargado'
+  return gestionaCarta()
 }
 
 /**

@@ -15,7 +15,9 @@
  *     desplegable de seleccion multiple, en un movil, se marca uno sin querer y
  *     no se nota; aqui se ve de un vistazo lo que lleva el plato.
  *
- * El encargado mantiene la carta pero NO toca los precios (seccion 7): al
+ * La carta la mantiene todo el equipo, precios incluidos (migracion
+ * 1757200000_rol_administrador.js). Quien cambia un precio queda apuntado en
+ * «Actividad» con el antes y el despues. Al
  * editar se los encuentra bloqueados y con el motivo escrito. Quien lo impide
  * de verdad es pb_hooks/roles.pb.js; esto es para no ensenarle un campo que le
  * va a devolver un 403.
@@ -26,7 +28,7 @@ import { enfocarAlta } from '../foco.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { interruptor } from '../piezas/interruptor.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
-import { rol, esDueno } from '../sesion.js'
+import { esAdmin } from '../sesion.js'
 import { ir } from '../enrutador.js'
 import { cargarCarta, guardarPlato, borrarPlato, urlFoto } from '../datos.js'
 import { precioOpcional, aNumero } from '../formato.js'
@@ -89,10 +91,6 @@ function formulario(contenedor, estado, original) {
   const esNuevo = !original
   const categorias = estado.carta.categorias
 
-  // El encargado no toca precios AL EDITAR. Al crear si: un plato sin precio no
-  // se puede guardar, el campo es obligatorio, y alguien tiene que ponerlo.
-  const preciosBloqueados = rol() === 'encargado' && !esNuevo
-
   const estadoLocal = {
     alergenos: new Set(original?.alergenos || []),
     visible: original ? !!original.visible : true,
@@ -124,8 +122,8 @@ function formulario(contenedor, estado, original) {
   })
   descripcionEn.value = original?.descripcion_en || ''
 
-  const precioBarra = campoPrecio('p-barra', original?.precio_barra, preciosBloqueados)
-  const precioTerraza = campoPrecio('p-terraza', original?.precio_terraza, preciosBloqueados)
+  const precioBarra = campoPrecio('p-barra', original?.precio_barra)
+  const precioTerraza = campoPrecio('p-terraza', original?.precio_terraza)
 
   const categoria = el('select', { class: 'entrada', id: 'p-categoria' },
     categorias.map((c) => el('option', {
@@ -134,15 +132,13 @@ function formulario(contenedor, estado, original) {
       text: c.visible === false ? `${c.nombre} (oculta)` : c.nombre,
     })))
 
-  // Sigue la misma regla que los precios: el encargado lo ve, no lo toca. Es una
-  // decision de precio —cuanto se le cobra de mas al cliente por el huevo— y
-  // quien la impide de verdad es pb_hooks/roles.pb.js; esto es para no ensenar
-  // un control que va a devolver un 403.
+  // Decide cuanto se le cobra de mas al cliente por el huevo, asi que va con
+  // los precios y no con los alergenos. Lo puede tocar todo el equipo, igual
+  // que los precios, y el cambio queda apuntado en «Actividad».
   const controlExtras = interruptor({
     nombre: 'Admite ingredientes extra',
     pie: `En la carta sale «+${importeExtra()} por ingrediente extra»`,
     puesto: estadoLocal.admiteExtras,
-    desactivado: preciosBloqueados,
     alCambiar: (v) => { estadoLocal.admiteExtras = v },
   })
 
@@ -236,15 +232,13 @@ function formulario(contenedor, estado, original) {
 
     const barra = aNumero(precioBarra.value)
     const terraza = aNumero(precioTerraza.value)
-    if (!preciosBloqueados) {
-      // El precio de barra PUEDE quedarse en blanco: es un plato que todavia no
-      // tiene precio, y hay 278 asi desde que se cargo la carta del bar. Se
-      // guarda y se avisa en la lista, pero NO sale en la carta publica: eso lo
-      // impide la regla de la coleccion, no esta pantalla (D-76).
-      if (barra < 0 || (terraza !== null && terraza < 0)) return falla('Un precio no puede ser negativo.', precioBarra)
-      if (barra === null && terraza !== null) {
-        return falla('Si hay precio de terraza / salón, tiene que haber precio de barra.', precioBarra)
-      }
+    // El precio de barra PUEDE quedarse en blanco: es un plato que todavia no
+    // tiene precio, y hay 278 asi desde que se cargo la carta del bar. Se
+    // guarda y se avisa en la lista, pero NO sale en la carta publica: eso lo
+    // impide la regla de la coleccion, no esta pantalla (D-76).
+    if (barra < 0 || (terraza !== null && terraza < 0)) return falla('Un precio no puede ser negativo.', precioBarra)
+    if (barra === null && terraza !== null) {
+      return falla('Si hay precio de terraza / salón, tiene que haber precio de barra.', precioBarra)
     }
 
     const campos = {
@@ -257,17 +251,13 @@ function formulario(contenedor, estado, original) {
       visible: estadoLocal.visible,
     }
 
-    // Al editar, el encargado ni siquiera manda los precios: asi el hook no
-    // tiene nada que comparar y el error no llega a existir.
-    if (!preciosBloqueados) {
-      // Un cero es «todavia sin precio», igual que en el minimo de un producto
-      // (D-53). PocketBase guarda como 0 un campo numerico vacio, asi que el
-      // cero es el unico valor posible para decir «no lo se».
-      campos.precio_barra = barra === null ? 0 : barra
-      // Vacio de verdad, no cero: un plato sin precio de terraza no vale 0 €.
-      campos.precio_terraza = terraza === null ? null : terraza
-      campos.admite_extras = estadoLocal.admiteExtras
-    }
+    // Un cero es «todavia sin precio», igual que en el minimo de un producto
+    // (D-53). PocketBase guarda como 0 un campo numerico vacio, asi que el
+    // cero es el unico valor posible para decir «no lo se».
+    campos.precio_barra = barra === null ? 0 : barra
+    // Vacio de verdad, no cero: un plato sin precio de terraza no vale 0 €.
+    campos.precio_terraza = terraza === null ? null : terraza
+    campos.admite_extras = estadoLocal.admiteExtras
 
     // El orden solo se toca arrastrando en la lista. Un plato nuevo va al final
     // de su categoria, que es donde se espera encontrarlo.
@@ -325,20 +315,15 @@ function formulario(contenedor, estado, original) {
           campo('Precio barra', 'p-barra', precioBarra),
           campo('Precio terraza / salón', 'p-terraza', precioTerraza),
         ]),
-        preciosBloqueados
-          ? el('p', { class: 'parrafo parrafo--apagado', text:
-            'Los precios solo los cambia el dueño. Todo lo demás del plato sí puedes tocarlo.' })
-          : [
-            el('p', { class: 'parrafo parrafo--apagado', text:
-              'El de terraza / salón puede quedarse vacío: entonces en la carta sale un solo precio. '
-              + 'Las dos zonas tienen el mismo precio, por eso van en una sola columna.' }),
-            // El aviso solo sale cuando de verdad falta el precio, y dice la
-            // consecuencia, no la regla: lo que le importa a quien lo lee es
-            // que ese plato no lo ve nadie desde la calle.
-            el('p', { class: 'formulario__aviso', hidden: !!(original?.precio_barra > 0) || undefined, text:
-              'Sin precio de barra, este plato no sale en la carta pública. Se guarda igual: '
-              + 'está en el panel esperando a que le pongas el precio.' }),
-          ],
+        el('p', { class: 'parrafo parrafo--apagado', text:
+          'El de terraza / salón puede quedarse vacío: entonces en la carta sale un solo precio. '
+          + 'Las dos zonas tienen el mismo precio, por eso van en una sola columna.' }),
+        // El aviso solo sale cuando de verdad falta el precio, y dice la
+        // consecuencia, no la regla: lo que le importa a quien lo lee es
+        // que ese plato no lo ve nadie desde la calle.
+        el('p', { class: 'formulario__aviso', hidden: !!(original?.precio_barra > 0) || undefined, text:
+          'Sin precio de barra, este plato no sale en la carta pública. Se guarda igual: '
+          + 'está en el panel esperando a que le pongas el precio.' }),
 
         el('div', { class: 'campo' }, [
           el('div', { class: 'tarjeta' }, [controlExtras]),
@@ -383,7 +368,7 @@ function formulario(contenedor, estado, original) {
           ]),
         ]),
 
-        esDueno() && original
+        esAdmin() && original
           ? el('div', { class: 'campo' }, [
             el('button', {
               type: 'button', class: 'btn btn--discreto', text: 'Eliminar plato',
@@ -423,7 +408,7 @@ function confirmarBorrado(estado, plato) {
       boton.disabled = false
       boton.textContent = 'Sí, eliminarlo'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede eliminar platos.'
+        ? 'Solo un administrador puede eliminar platos.'
         : 'No hemos podido eliminarlo. Inténtalo otra vez.'
       error.hidden = false
     }
@@ -469,10 +454,10 @@ function campoTexto(id, valor, extra = {}) {
   return n
 }
 
-function campoPrecio(id, valor, bloqueado) {
+function campoPrecio(id, valor) {
   const n = el('input', {
     class: 'entrada', id, type: 'text', inputmode: 'decimal',
-    placeholder: '0,00', disabled: bloqueado || null,
+    placeholder: '0,00',
   })
   // precioOpcional y no precio: un cero guardado significa "sin poner" y el
   // campo tiene que salir vacio, no con un "0,00" que nadie ha escrito.

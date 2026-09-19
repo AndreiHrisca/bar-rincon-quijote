@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * El cajón de lo que no cabe en las otras cuatro entradas: la cuenta con la que
  * se ha entrado, el botón de salir y las pantallas que se usan de vez en
- * cuando —eventos, estadísticas y almacén—.
+ * cuando —almacén, eventos, estadísticas y la actividad del panel—.
  *
  * Salir importa más de lo que parece en un bar: el móvil del panel se deja en
  * la barra y lo coge cualquiera. Que el botón esté escondido tres pantallas
@@ -13,13 +13,30 @@
  * maqueta y no se toca (D-33). Para que eso no entierre el gesto de cada día,
  * «Apuntar una falta» está además en «Hoy», que es donde se está cuando se
  * descubre que no queda harina (D-46).
+ *
+ * TODAS LAS FILAS SE CONSTRUYEN CON filaIr(), vayan a una ruta o abran una
+ * hoja. Antes no: las que abrían una hoja —«Horario del bar» y «Datos
+ * legales»— se escribían a mano con un <button> y las demás con filaIr(), y
+ * eso salía en pantalla. Un <button> no es un bloque: se encoge hasta el ancho
+ * de su contenido, así que las dos se apretaban una al lado de la otra en la
+ * misma línea mientras el resto ocupaba la fila entera. Con una sola función,
+ * el mismo marcado y el mismo CSS para las dos cosas, no puede volver a
+ * descuadrarse. (El arreglo de fondo está además en .fila-ir, que ahora dice
+ * `width: 100%` para que un <button> con esa clase se comporte como bloque
+ * venga de donde venga.)
+ *
+ * LO QUE SE HA QUITADO: había una sección «Próximamente» con dos líneas de
+ * texto muerto —el QR de las mesas y el aviso de platos con algo agotado— que
+ * no llevaban a ninguna parte. Una lista de promesas dentro de una herramienta
+ * de trabajo ocupa sitio y no hace nada; lo que falta por construir va en
+ * docs/README.md, que es donde se mira para saberlo.
  */
 
 import { el, pintar } from '../dom.js'
 import { nav } from '../piezas/nav.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { BASE } from '../enrutador.js'
-import { usuario, rol, NOMBRE_ROL, salir, esDueno, gestionaReservas } from '../sesion.js'
+import { usuario, rol, NOMBRE_ROL, salir, esAdmin } from '../sesion.js'
 import { hojaDatosLegales, faltanDatosLegales } from './datos-legales.js'
 import { hojaHorario, resumenDeHorario } from './horario.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
@@ -28,18 +45,6 @@ import { icono } from '/compartido/js/iconos.js'
 const ALMACEN = [
   { ruta: '/almacen/falta', nombre: 'Apuntar una falta', pie: 'Se ha acabado algo. Dos toques y queda apuntado para todos.' },
   { ruta: '/almacen',       nombre: 'Almacén',           pie: 'Lo que hay, lo que falta y quién lo trae.' },
-]
-
-/**
- * Lo que aun no esta. En el idioma del bar, no en el mio.
- *
- * Decia «Lo que falta por construir» con «Fase 10» y «Fase 11» al lado. Las
- * fases son de mi plan de trabajo y no significan nada para quien abre esto:
- * lo unico que quiere saber es que va a poder hacer y que todavia no.
- */
-const PROXIMAMENTE = [
-  'QR de las mesas y manuales',
-  'Avisar de los platos que llevan algo agotado',
 ]
 
 export function mas(contenedor, estado, { alSalir }) {
@@ -53,24 +58,14 @@ export function mas(contenedor, estado, { alSalir }) {
 }
 
 function pantalla(estado, u, { alSalir, repintar }) {
-  // La cara pública del bar: la ve el dueño y el encargado, igual que la carta.
-  const laCaraPublica = [
-    gestionaReservas()
-      ? { ruta: '/eventos', nombre: 'Eventos', pie: 'El menú navideño, los vermús y las celebraciones que se anuncian en la web.' }
-      : null,
-    gestionaReservas()
-      ? { ruta: '/estadisticas', nombre: 'La carta en números', pie: 'Escaneos del QR, platos más mirados y lo que se busca y no está.' }
-      : null,
-  ].filter(Boolean)
-
   return el('div', { class: 'pantalla' }, [
     cabecera('Más'),
     el('div', { class: 'pantalla__scroll' }, [
       el('div', { class: 'margen margen--alto' }, [
 
         // Mientras falten los datos del titular, el aviso legal de la web sale
-        // incompleto. Solo lo ve el dueño, que es quien los tiene.
-        esDueno() && faltanDatosLegales(estado.ajustes)
+        // incompleto. Solo lo ve el administrador, que es quien los tiene.
+        esAdmin() && faltanDatosLegales(estado.ajustes)
           ? avisoDatosLegales(estado, repintar)
           : null,
 
@@ -88,60 +83,45 @@ function pantalla(estado, u, { alSalir, repintar }) {
 
         // El almacen sube aqui, al sitio que ocupaba el boton de salir a ancho
         // completo. Es lo que se usa a diario; salir, una vez al dia como mucho.
-        el('h2', { class: 'rotulo-seccion', text: 'Almacén' }),
-        el('section', { class: 'tarjeta' }, [
-          el('div', { class: 'filas' }, ALMACEN.map(filaIr)),
-        ]),
+        seccion('Almacén', ALMACEN),
 
-        laCaraPublica.length
-          ? [
-            el('h2', { class: 'rotulo-seccion', text: 'La carta y la web' }),
-            el('section', { class: 'tarjeta' }, [
-              el('div', { class: 'filas' }, laCaraPublica.map(filaIr)),
-            ]),
-          ]
+        // La cara pública del bar: lo que se anuncia y lo que se mide. Es
+        // administrar el negocio, no trabajo del turno.
+        esAdmin()
+          ? seccion('La carta y la web', [
+            { ruta: '/eventos', nombre: 'Eventos', pie: 'El menú navideño, los vermús y las celebraciones que se anuncian en la web.' },
+            { ruta: '/estadisticas', nombre: 'La carta en números', pie: 'Escaneos del QR, platos más mirados y lo que se busca y no está.' },
+          ])
           : null,
 
-        esDueno()
-          ? [
-            el('h2', { class: 'rotulo-seccion', text: 'Del negocio' }),
-            el('section', { class: 'tarjeta' }, [
-              el('div', { class: 'filas' }, [
-                // El horario primero: es lo que la web enseña a todo el que
-                // entra, y lo que hay que cambiar el dia que el bar cierre.
-                el('button', {
-                  type: 'button', class: 'fila-ir',
-                  onclick: () => hojaHorario(estado, repintar),
-                }, [
-                  el('span', { class: 'fila-ir__cuerpo' }, [
-                    el('span', { class: 'fila-ir__nombre', text: 'Horario del bar' }),
-                    el('span', { class: 'fila-ir__pie', text: resumenDeHorario(estado.ajustes) }),
-                  ]),
-                  icono('chevron', { clase: 'ic fila-ir__flecha' }),
-                ]),
-                el('button', {
-                  type: 'button', class: 'fila-ir',
-                  onclick: () => hojaDatosLegales(estado, repintar),
-                }, [
-                  el('span', { class: 'fila-ir__cuerpo' }, [
-                    el('span', { class: 'fila-ir__nombre', text: 'Datos legales' }),
-                    el('span', { class: 'fila-ir__pie', text:
-                      'Quién figura como titular de la web y cuánto se guardan las reservas.' }),
-                  ]),
-                  icono('chevron', { clase: 'ic fila-ir__flecha' }),
-                ]),
-              ]),
-            ]),
-          ]
+        esAdmin()
+          ? seccion('Del negocio', [
+            // El horario primero: es lo que la web enseña a todo el que
+            // entra, y lo que hay que cambiar el dia que el bar cierre.
+            {
+              nombre: 'Horario del bar',
+              pie: resumenDeHorario(estado.ajustes),
+              alPulsar: () => hojaHorario(estado, repintar),
+            },
+            {
+              nombre: 'Datos legales',
+              pie: 'Quién figura como titular de la web y cuánto se guardan las reservas.',
+              alPulsar: () => hojaDatosLegales(estado, repintar),
+            },
+          ])
           : null,
 
-        el('h2', { class: 'rotulo-seccion', text: 'Próximamente' }),
-        el('section', { class: 'tarjeta' }, [
-          el('div', { class: 'filas' }, PROXIMAMENTE.map((texto) =>
-            el('div', { class: 'futuro' }, [
-              el('span', { class: 'futuro__texto', text: texto }),
-            ]))),
-        ]),
+        // Quién ha hecho cada cambio. Va en su propia sección y no dentro de
+        // «Del negocio» porque no se configura nada: se consulta.
+        esAdmin()
+          ? seccion('Gestión', [
+            {
+              ruta: '/actividad',
+              nombre: 'Actividad',
+              pie: 'Consulta quién ha hecho cada cambio en el panel.',
+            },
+          ])
+          : null,
 
         el('p', { class: 'pie-nota', text: 'nndrei.dev · soporte 24/48 h' }),
         el('div', { style: 'height: var(--sp-5)' }),
@@ -149,6 +129,38 @@ function pantalla(estado, u, { alSalir, repintar }) {
     ]),
     nav('/mas'),
   ])
+}
+
+/** Un rótulo y su tarjeta de filas. Todas las secciones de «Más» son esto. */
+function seccion(rotulo, entradas) {
+  return [
+    el('h2', { class: 'rotulo-seccion', text: rotulo }),
+    el('section', { class: 'tarjeta' }, [
+      el('div', { class: 'filas' }, entradas.map(filaIr)),
+    ]),
+  ]
+}
+
+/**
+ * Una fila que lleva a otro sitio.
+ *
+ * Con `ruta` sale un enlace de verdad —se puede copiar, abrir en otra pestaña y
+ * compartir—; con `alPulsar`, un botón, que es lo que toca cuando lo que se
+ * abre es una hoja y no una pantalla con URL propia. Por dentro son el mismo
+ * marcado y la misma clase, que es justo lo que hace que se vean iguales.
+ */
+function filaIr(entrada) {
+  const dentro = [
+    el('span', { class: 'fila-ir__cuerpo' }, [
+      el('span', { class: 'fila-ir__nombre', text: entrada.nombre }),
+      el('span', { class: 'fila-ir__pie', text: entrada.pie }),
+    ]),
+    icono('chevron', { clase: 'ic fila-ir__flecha' }),
+  ]
+
+  return entrada.ruta
+    ? el('a', { class: 'fila-ir', href: BASE + entrada.ruta }, dentro)
+    : el('button', { type: 'button', class: 'fila-ir', onclick: entrada.alPulsar }, dentro)
 }
 
 /**
@@ -187,16 +199,6 @@ function confirmarSalida(alSalir) {
       }),
     ],
   })
-}
-
-function filaIr(e) {
-  return el('a', { class: 'fila-ir', href: BASE + e.ruta }, [
-    el('span', { class: 'fila-ir__cuerpo' }, [
-      el('span', { class: 'fila-ir__nombre', text: e.nombre }),
-      el('span', { class: 'fila-ir__pie', text: e.pie }),
-    ]),
-    icono('chevron', { clase: 'ic fila-ir__flecha' }),
-  ])
 }
 
 function avisoDatosLegales(estado, repintar) {

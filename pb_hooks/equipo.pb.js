@@ -13,11 +13,11 @@
 //      que ser la misma cuenta, y quien la teclea a las once de la noche no
 //      tiene que acordarse de como se escribio el dia que se creo.
 //
-//   2. NADIE SE BORRA A SI MISMO, y no se borra la ultima cuenta de dueno. Si
-//      Santi borra su cuenta por error, o se queda el bar sin ningun dueno, la
-//      unica forma de volver a entrar es el panel de administracion de
-//      PocketBase. Es el mismo criterio que impide degradarse a uno mismo
-//      (roles.pb.js).
+//   2. NADIE SE BORRA A SI MISMO, y no se borra la ultima cuenta de
+//      administrador. Si Santi borra su cuenta por error, o se queda el bar sin
+//      ningun administrador, la unica forma de volver a entrar es el panel de
+//      administracion de PocketBase. Es el mismo criterio que impide degradarse
+//      a uno mismo (roles.pb.js).
 //
 //   3. LA FECHA DE BAJA LA ESCRIBE EL SERVIDOR al apagar «Trabaja aqui», y la
 //      borra al volver a encenderlo. Igual que `oculto_desde` en los platos
@@ -51,22 +51,23 @@ onRecordUpdateRequest((e) => {
 }, 'users')
 
 // ---------------------------------------------------------------------------
-// Borrar una cuenta: ni la propia, ni la ultima del dueno
+// Borrar una cuenta: ni la propia, ni la ultima de administrador
 // ---------------------------------------------------------------------------
 onRecordDeleteRequest((e) => {
   if (e.hasSuperuserAuth()) return e.next()
 
   const quien = e.auth
   if (quien && quien.id === e.record.id) {
-    throw new ForbiddenError('No puedes borrar tu propia cuenta. Que la borre otro dueño.')
+    throw new ForbiddenError('No puedes borrar tu propia cuenta. Que la borre otro administrador.')
   }
 
-  if (e.record.getString('rol') === 'dueno') {
-    // findAllRecords devuelve la lista entera; son cuatro cuentas, no un censo.
-    const duenos = e.app.findRecordsByFilter('users', 'rol = "dueno"', '', 0, 0)
-    if (duenos.length <= 1) {
+  if (e.record.getString('rol') === 'admin') {
+    // findRecordsByFilter devuelve la lista entera; son cuatro cuentas, no un censo.
+    const admins = e.app.findRecordsByFilter('users', 'rol = "admin"', '', 0, 0)
+    if (admins.length <= 1) {
       throw new BadRequestError(
-        'Es la única cuenta de dueño que queda. Haz dueño a otra persona antes de borrarla.')
+        'Es la única cuenta de administrador que queda. Haz administradora a otra '
+        + 'persona antes de borrarla.')
     }
   }
 

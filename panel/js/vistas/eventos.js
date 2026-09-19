@@ -13,8 +13,9 @@
  * las cinco entradas de la maqueta y no se toca (D-33). Un evento se crea
  * cuatro veces al año.
  *
- * Quién puede: crear y editar, el dueño y el encargado (es la cara pública del
- * bar, como la carta). Borrar, solo el dueño. Lo decide la colección
+ * Quién puede: solo el administrador. Los eventos son la cara pública del bar
+ * —lo que se anuncia en la web— y anunciarlos es administrar el negocio, no
+ * trabajo del turno. Lo decide la colección
  * (migración 1756700800_eventos_metricas.js); aquí solo se evita enseñar
  * botones que van a devolver un 403.
  */
@@ -25,7 +26,7 @@ import { nav } from '../piezas/nav.js'
 import { cabecera } from '../piezas/cabecera.js'
 import { abrirHoja, cerrarHoja } from '../piezas/hoja.js'
 import { interruptor } from '../piezas/interruptor.js'
-import { esDueno, gestionaReservas } from '../sesion.js'
+import { esAdmin, gestionaReservas } from '../sesion.js'
 import { ir } from '../enrutador.js'
 import { cargarEventos, guardarEvento, borrarEvento, urlImagenEvento } from '../datos.js'
 import { diaDe, hoyISO, fechaLarga, aFechaPB } from '../fechas.js'
@@ -376,7 +377,7 @@ function hojaEvento(evento, { alGuardar, alBorrar }) {
 
       el('div', { class: 'campo' }, [el('div', { class: 'tarjeta' }, [controlVisible])]),
 
-      esDueno() && evento
+      esAdmin() && evento
         ? el('button', {
           type: 'button', class: 'btn btn--discreto btn--suelto', text: 'Eliminar evento',
           onclick: () => confirmarBorrado(evento, alBorrar, reabrir),
@@ -409,7 +410,7 @@ function confirmarBorrado(evento, alBorrar, alEcharseAtras) {
       boton.disabled = false
       boton.textContent = 'Sí, eliminarlo'
       error.textContent = err?.status === 403
-        ? 'Solo el dueño puede eliminar eventos.'
+        ? 'Solo un administrador puede eliminar eventos.'
         : 'No hemos podido eliminarlo. Inténtalo otra vez.'
       error.hidden = false
     }

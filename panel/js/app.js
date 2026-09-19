@@ -38,6 +38,7 @@ import { fichajes } from './vistas/fichajes.js'
 import { equipo } from './vistas/equipo.js'
 import { cuentas } from './vistas/cuentas.js'
 import { mas } from './vistas/mas.js'
+import { actividad } from './vistas/actividad.js'
 import { registrarPWA, olvidarDatosGuardados } from './pwa.js'
 import { sprite } from '/compartido/js/iconos.js'
 
@@ -103,6 +104,13 @@ registrar('/personal/cuentas', conSesion(() => cuentas(contenedor, estado)))
 // la barra inferior tiene las cinco entradas de la maqueta y no se toca (D-33).
 registrar('/eventos', conSesion(() => eventos(contenedor, estado)))
 registrar('/estadisticas', conSesion(() => estadisticas(contenedor, estado)))
+
+// El diario del panel cuelga de «Más», como el almacen y las estadisticas. La
+// pantalla es solo del administrador, pero eso NO se decide aqui: lo decide la
+// regla de la coleccion `actividad`. Una ruta escondida en el enrutador no es
+// un permiso; lo unico que haria es que quien teclee la direccion vea una
+// pantalla rara en vez del aviso de «esto no es para tu cuenta».
+registrar('/actividad', conSesion(() => actividad(contenedor, estado)))
 
 registrar('/mas', conSesion(() => mas(contenedor, estado, { alSalir: aAcceso })))
 
