@@ -14,6 +14,7 @@
  */
 
 import { el } from '../dom.js'
+import { esAdmin } from '../sesion.js'
 import { BASE } from '../enrutador.js'
 import { icono } from '/compartido/js/iconos.js'
 
@@ -27,7 +28,13 @@ export const ENTRADAS = [
 
 export function nav(rutaActiva) {
   return el('nav', { class: 'nav', 'aria-label': 'Secciones del panel' },
-    ENTRADAS.map((entrada) => {
+    (esAdmin() ? ENTRADAS : [
+      { ruta: '/almacen', icono: 'almacen', texto: 'Almacén' },
+      { ruta: '/reservas', icono: 'reservas', texto: 'Reservas' },
+      { ruta: '/personal/fichajes', icono: 'personal', texto: 'Fichaje' },
+      { ruta: '/carta', icono: 'carta', texto: 'Carta' },
+      { ruta: '/mas', icono: 'mas', texto: 'Cuenta' },
+    ]).map((entrada) => {
       const activa = entrada.ruta === rutaActiva
       return el('a', {
         class: `nav__ir${activa ? ' nav__ir--activa' : ''}`,

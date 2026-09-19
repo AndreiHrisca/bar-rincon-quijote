@@ -387,22 +387,30 @@ seccion('5. Roles: quien puede tocar la carta')
 # empleado la mantiene entera: crea platos, los edita y les cambia el precio.
 # Es lo que hace todo el dia, y antes no podia ni corregir una descripcion.
 #
-# Lo que NO puede es BORRAR: un plato borrado se lleva su foto, su sitio y su
-# historia. Para quitar algo de la carta esta el interruptor de «visible», que
-# se deshace.
+# Carta: cada operación administrativa se prueba directamente contra la API.
 nuevo = {'categoria': cat['id'], 'nombre': 'Plato de rol', 'precio_barra': 9, 'visible': True}
+for col, datos, rid in [('platos', nuevo, plato_vis['id']),
+                        ('categorias', {'nombre': 'Categoría de rol', 'slug': 'categoria-rol'}, cat['id'])]:
+    for metodo, ruta, cuerpo in [
+        ('POST', f'/api/collections/{col}/records', datos),
+        ('PATCH', f'/api/collections/{col}/records/{rid}', {'nombre': 'No permitido'}),
+        ('DELETE', f'/api/collections/{col}/records/{rid}', None),
+    ]:
+        cod, r = peticion(metodo, ruta, cuerpo, token=tokens['empleado'])
+        comprueba(f'empleado NO puede {metodo} {col}', cod in (400, 403, 404), str(r))
+    cod, creado = peticion('POST', f'/api/collections/{col}/records', datos, token=tokens['admin'])
+    comprueba(f'admin crea {col}', cod == 200, str(creado))
+    if cod == 200:
+        cod, r = peticion('PATCH', f'/api/collections/{col}/records/{creado["id"]}',
+                          {'nombre': 'Editado por admin'}, token=tokens['admin'])
+        comprueba(f'admin edita {col}', cod == 200, str(r))
+        cod, r = peticion('DELETE', f'/api/collections/{col}/records/{creado["id"]}', token=tokens['admin'])
+        comprueba(f'admin borra {col}', cod == 204, str(r))
 
-cod, creado = peticion('POST', '/api/collections/platos/records', nuevo, token=tokens['empleado'])
-comprueba('un empleado SI puede crear platos', cod == 200, f'devolvio {cod} {creado}')
-
-if cod == 200:
-    cod, r = peticion('DELETE', f'/api/collections/platos/records/{creado["id"]}',
-                      token=tokens['empleado'])
-    comprueba('pero NO puede borrarlos', cod in (400, 403, 404), f'devolvio {cod}')
-
-    cod, r = peticion('DELETE', f'/api/collections/platos/records/{creado["id"]}',
-                      token=tokens['admin'])
-    comprueba('el administrador SI puede borrarlos', cod == 204, f'devolvio {cod} {r}')
+for col in ['turnos', 'metricas', 'actividad']:
+    no_expone(col, token=tokens['empleado'])
+cod, r = peticion('GET', '/api/collections/empleados/records', token=tokens['otro'])
+comprueba('empleado no ve las fichas ajenas', cod == 200 and all(x['usuario'] == uid_otro for x in r['items']))
 
 cod, r = peticion('PATCH', f'/api/collections/ajustes/records/{AJ_ID}',
                   {'aforo_salon': 40}, token=tokens['empleado'])
@@ -412,19 +420,14 @@ cod, r = peticion('PATCH', f'/api/collections/ajustes/records/{AJ_ID}',
                   {'aforo_salon': 24}, token=tokens['admin'])
 comprueba('el administrador SI puede tocar los ajustes', cod == 200, f'devolvio {cod} {r}')
 
-# --- El precio lo cambia el turno, y queda apuntado --------------------------
-# Hasta la migracion 1757200000 habia un hook que le impedia al «encargado»
-# tocar los precios. Ese rol ya no existe y la restriccion se levanto a
-# proposito: un plato que se puede editar entero menos el numero mas importante
-# es una regla que no se sostiene en una pantalla. La garantia ahora es otra, y
-# mejor: el cambio queda en «Actividad» con el antes y el despues.
+# Solo el administrador cambia precios; el registro de actividad se conserva.
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
                   {'precio_barra': 99}, token=tokens['empleado'])
-comprueba('un empleado SI puede cambiar el precio de un plato', cod == 200, f'devolvio {cod} {r}')
+comprueba('un empleado NO puede cambiar el precio de un plato', cod in (400, 403, 404), f'devolvio {cod} {r}')
 
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
                   {'descripcion': 'Cambiada por un empleado'}, token=tokens['empleado'])
-comprueba('y lo demas del plato tambien', cod == 200, f'devolvio {cod}')
+comprueba('ni el resto del plato', cod in (400, 403, 404), f'devolvio {cod}')
 
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
                   {'precio_barra': 11}, token=tokens['admin'])
@@ -433,15 +436,15 @@ comprueba('el administrador tambien, claro', cod == 200, f'devolvio {cod}')
 # --- Los ingredientes extra ------------------------------------------------
 # `admite_extras` enciende el «+0,50 € por ingrediente» sobre ese plato. Iba con
 # los precios por el mismo candado (D-79) y sigue yendo con ellos: ahora eso
-# significa que tambien lo toca el turno.
+# significa que solo lo toca el administrador.
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
-                  {'admite_extras': True}, token=tokens['empleado'])
-comprueba('un empleado SI puede encender los ingredientes extra',
+                  {'admite_extras': True}, token=tokens['admin'])
+comprueba('el administrador SI puede encender los ingredientes extra',
           cod == 200 and r.get('admite_extras') is True, f'devolvio {cod} {r.get("admite_extras")!r}')
 
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
                   {'admite_extras': True, 'descripcion': 'Con el extra ya encendido'},
-                  token=tokens['empleado'])
+                  token=tokens['admin'])
 comprueba('y guardar el plato entero con el ya encendido', cod == 200, f'devolvio {cod} {r}')
 
 # El campo viaja a la carta publica: si no, el aviso no se podria pintar. Va
@@ -453,8 +456,8 @@ comprueba('la carta publica recibe admite_extras',
           f'devolvio {cod} {r}')
 
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
-                  {'admite_extras': False}, token=tokens['empleado'])
-comprueba('y un empleado puede volver a apagarlo', cod == 200, f'devolvio {cod} {r}')
+                  {'admite_extras': False}, token=tokens['admin'])
+comprueba('y el administrador puede volver a apagarlo', cod == 200, f'devolvio {cod} {r}')
 
 # --- «Oculto desde» lo escribe el servidor -----------------------------------
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
@@ -532,7 +535,9 @@ def fila_metrica(tipo, valor):
     # Con UNA sola condicion y el resto filtrado aqui: peticion() no escapa el
     # «&» de la consulta, asi que un filtro con «&&» se parte en dos parametros
     # y PocketBase lo ignora. Se paga una vez y se aprende.
-    hoy = date.today().isoformat()
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    hoy = datetime.now(ZoneInfo('Europe/Madrid')).date().isoformat()
     _, r = peticion('GET', f'/api/collections/metricas/records?perPage=500&filter=(dia="{hoy}")',
                     token=raiz)
     for fila in r.get('items', []):
@@ -593,8 +598,8 @@ comprueba('ni se puede abrir por su ID', cod == 404, f'devolvio {cod}')
 
 cod, r = peticion('GET', '/api/collections/eventos/records'
                   '?filter=(titulo="Evento apagado de prueba")', token=tokens['otro'])
-comprueba('con sesion SI se ve: el panel tiene que poder encenderlo',
-          r.get('totalItems') == 1, f'devolvio {r}')
+comprueba('el empleado NO ve los eventos ocultos',
+          r.get('totalItems') == 0, f'devolvio {r}')
 
 # Anunciar algo en la web es administrar el negocio, no trabajo del turno: los
 # eventos son del administrador de punta a punta.
@@ -943,8 +948,8 @@ cod, r = peticion('POST', '/api/collections/turnos/records',
 comprueba('un empleado NO pone turnos en el cuadrante', cod in (400, 403), f'devolvio {cod}')
 
 cod, r = peticion('GET', '/api/collections/turnos/records?perPage=5', token=tokens['otro'])
-comprueba('pero SI ve el cuadrante entero: para eso esta',
-          cod == 200 and r.get('totalItems', 0) > 0, f'devolvio {cod} {r.get("totalItems")}')
+comprueba('tampoco puede leer el cuadrante',
+          cod == 200 and r.get('totalItems', 0) == 0, f'devolvio {cod} {r.get("totalItems")}')
 
 if turno.get('id'):
     peticion('DELETE', f'/api/collections/turnos/records/{turno["id"]}', token=raiz)
@@ -1124,10 +1129,10 @@ _, r = peticion('POST', '/api/collections/users/auth-with-password',
                 {'identity': 'prueba-empleado@ejemplo.invalid', 'password': CLAVE_NUEVA})
 tokens['empleado'] = r['token']
 
-# Una accion trazable: un empleado le cambia el precio a un plato. Deja linea, y
+# Una accion trazable: el administrador cambia el precio de un plato. Deja linea, y
 # con el antes y el despues dentro.
 cod, r = peticion('PATCH', f'/api/collections/platos/records/{plato_vis["id"]}',
-                  {'precio_barra': 12.5}, token=tokens['empleado'])
+                  {'precio_barra': 12.5}, token=tokens['admin'])
 comprueba('la accion que se va a rastrear ha ocurrido de verdad', cod == 200,
           f'devolvio {cod} {r}')
 

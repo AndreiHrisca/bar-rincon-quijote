@@ -63,7 +63,10 @@ function cuandoVolvemos(estado) {
 
 function botonera() {
   return el('nav', { class: 'acciones', 'aria-label': t('carta') }, [
-    el('a', { class: 'btn btn--primario', href: '/carta', text: t('verCarta') }),
+    el('div', { class: 'acciones__carta' }, [
+      el('a', { class: 'btn btn--primario', href: '/carta#comida', text: t('verComida') }),
+      el('a', { class: 'btn btn--primario', href: '/carta#bebidas', text: t('verBebidas') }),
+    ]),
     el('a', { class: 'btn btn--linea', href: '/reserva', text: t('reservar') }),
   ])
 }

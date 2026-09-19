@@ -50,6 +50,9 @@ export function arrancar(alCambiarRuta) {
   // Al volver con el boton de atras se deja que el navegador restaure la
   // posicion del scroll.
   window.addEventListener('popstate', () => resolver())
+  window.addEventListener('hashchange', () => {
+    if (rutaActual() === '/carta' && ['#comida', '#bebidas'].includes(location.hash)) resolver()
+  })
 
   // Cualquier enlace interno se resuelve sin recargar. Se hace con delegacion
   // en el documento para que valga tambien para lo que se pinte despues.

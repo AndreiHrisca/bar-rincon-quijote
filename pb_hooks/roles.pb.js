@@ -16,14 +16,8 @@
 // 1756700100_usuarios_rol.js y 1757200000_rol_administrador.js, que remiten a
 // este fichero.
 //
-// LO QUE YA NO ESTA AQUI: hasta la migracion 1757200000 habia un segundo hook
-// que le impedia al «encargado» tocar los precios de la carta. El rol
-// «encargado» ya no existe —ahora hay administrador y empleado, y nada mas— y
-// el encargo nuevo pide expresamente que el empleado pueda modificar los platos
-// existentes, precio incluido. Un plato que se puede editar entero menos el
-// numero mas importante es una regla que se explica sola en una discusion pero
-// no en una pantalla. Quien cambie un precio queda apuntado en «Actividad» con
-// el antes y el despues, que es la garantia que de verdad hacia falta.
+// La escritura de platos y categorías está reservada al administrador por
+// la migración 1757300000_permisos_empleado.js. La lectura sigue disponible.
 //
 // OJO CON EL ALCANCE DE LOS HOOKS (ver DECISIONES.md, D-22): cada handler corre
 // en un runtime de JavaScript aislado. Nada de lo que se declare en el nivel

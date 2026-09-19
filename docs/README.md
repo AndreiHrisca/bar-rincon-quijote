@@ -192,16 +192,20 @@ otro toque.
 - **Eliminar un plato** solo lo hace el administrador y pide confirmación. Casi
   nunca es lo que se quiere: para un plato que se ha acabado, el interruptor.
 
-**La carta la mantiene todo el equipo**, precios incluidos: es lo que se hace a
-diario y un empleado que no puede corregir una descripción acaba avisando por
-WhatsApp a alguien que sí. La garantía no es el candado, es el rastro: cada
-cambio de precio queda en «Actividad» con el antes y el después
-(`DECISIONES.md`, D-99).
+**La carta solo la administra el administrador.** El empleado puede consultar
+la lista, buscar y desplegar categorías; no puede crear, editar, eliminar,
+reordenar ni cambiar visibilidad, precios o categorías. Las reglas de PocketBase
+lo impiden también mediante llamadas directas a la API.
+
+Los empleados tienen accesos a **Almacén, Reservas, Fichaje y Carta**. «Cuenta»
+permite consultar la sesión y salir. Las rutas administrativas redirigen al
+almacén. Solo pueden leer su propia ficha de empleado y sus propios fichajes;
+el cuadrante, las métricas y la actividad son del administrador.
 
 #### El almacén, desde el panel
 
-El almacén **no tiene entrada propia en la barra inferior**: la barra tiene las
-cinco de la maqueta y no se toca (`DECISIONES.md`, D-33). Cuelga de **Más**, y
+Para el administrador, el almacén cuelga de **Más**. El empleado tiene una
+entrada directa en la barra inferior. Para el administrador,
 lo que se hace todos los días —apuntar que falta algo— está además en **Hoy**,
 que es donde se está cuando se descubre que no queda harina (D-46).
 
@@ -357,8 +361,7 @@ gestor). Enlazarlas se puede desde los dos lados, y desde la ficha se le puede
 - **Se entra con el nombre de usuario** —`santi`, `marisa`—, que es lo que dibuja
   la maqueta. El correo vale también, pero es **opcional**: el bar no manda
   correos, así que no hace falta inventarse uno para cada persona (D-72).
-- **Solo el administrador** crea cuentas, cambia roles y borra. Un empleado solo
-  se ve a sí mismo en esa lista.
+- **Solo el administrador** crea cuentas, cambia roles y borra. Los empleados no acceden a la pantalla de cuentas.
 - **La contraseña y el correo los cambia el administrador** desde la cuenta, porque no
   hay correo saliente para un «he olvidado mi contraseña» (D-29 y D-69). La
   contraseña se ve mientras se escribe, para poder dictarla; las sesiones que
@@ -784,7 +787,7 @@ al panel y el correo, que es opcional (`DECISIONES.md`, D-72).
 | Rol | Puede |
 |---|---|
 | `admin` | Todo: ajustes, datos legales, cuentas y roles, equipo y cuadrante, almacén, eventos, estadísticas, actividad y todos los borrados. |
-| `empleado` | Reservas y carta enteras (ver, crear y modificar), apuntar y resolver faltas, dar de alta un producto al vuelo, fichar y ver **sus** horas. |
+| `empleado` | Almacén, reservas, fichaje y carta en solo lectura; puede apuntar y resolver faltas, dar de alta un producto al vuelo, fichar y ver **sus** horas. |
 
 Eran cuatro —`dueno`, `encargado`, `cocina` y `empleado`— hasta la migración
 `1757200000_rol_administrador.js`. En la base solo había cuentas de `dueno` y
@@ -794,7 +797,8 @@ D-98.
 Lo que un empleado **no** puede: crear, borrar ni cambiar el rol de una cuenta,
 tocar los ajustes o los datos legales, editar las fichas del equipo ni el
 cuadrante, mantener el catálogo del almacén, cerrar un recuento, publicar
-eventos, leer las estadísticas, ver la actividad del panel ni borrar nada.
+eventos, leer las estadísticas, ver la actividad del panel ni borrar nada. Tampoco
+puede crear, editar, reordenar u ocultar platos ni modificar categorías.
 
 ### El diseño
 
@@ -806,8 +810,9 @@ Todo eso está recogido en un único fichero, `compartido/css/tokens.css`. No ha
 colores a pelo repartidos por el código: si necesitas uno que no está, se añade
 ahí.
 
-Se diseña a **390 px de ancho primero**. En escritorio, una columna centrada de
-720 px como máximo; no hay un segundo layout.
+Se diseña a **390 px de ancho primero**. La portada y el panel aprovechan el
+escritorio con un máximo centrado de 1280 px. La carta pública y los diálogos
+conservan un ancho de lectura contenido. Ver [cambios finales](CAMBIOS-FINALES.md).
 
 ### Las tipografías
 

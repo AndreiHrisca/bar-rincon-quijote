@@ -44,7 +44,7 @@ import { icono } from '/compartido/js/iconos.js'
 // reconstruir de memoria lo que si.
 const ROLES = [
   ['admin', 'Administrador', 'Todo: ajustes, cuentas, equipo, almacén, eventos y la actividad del panel.'],
-  ['empleado', 'Empleado', 'Reservas y carta enteras, apuntar y resolver faltas, fichar y ver sus horas.'],
+  ['empleado', 'Empleado', 'Almacén, reservas, fichaje y carta de solo lectura.'],
 ]
 
 export async function cuentas(contenedor, estado) {

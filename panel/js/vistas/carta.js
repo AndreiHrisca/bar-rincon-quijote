@@ -245,7 +245,7 @@ function listado(estado, vista, acc) {
     return vacio({
       texto: 'Aún no hay ningún plato en la carta',
       pie: 'Se puede importar entera desde un CSV.',
-      accion: el('button', { type: 'button', class: 'btn btn--linea', text: 'Añadir el primer plato', onclick: acc.nuevo }),
+      accion: puedeEditarCarta() ? el('button', { type: 'button', class: 'btn btn--linea', text: 'Añadir el primer plato', onclick: acc.nuevo }) : null,
     })
   }
 
@@ -360,10 +360,9 @@ function filaPlato(plato, acc, { conAsidero }) {
     // Abrir el plato es un boton aparte del interruptor y del asidero: tres
     // controles hermanos, ninguno dentro de otro. Un boton dentro de otro no es
     // marcado valido y con teclado se vuelve un enredo.
-    el('button', {
-      type: 'button',
+    el(puedeEditarCarta() ? 'button' : 'div', {
       class: 'fila-plato__abrir',
-      onclick: () => acc.abrir(plato),
+      onclick: puedeEditarCarta() ? () => acc.abrir(plato) : null,
     }, [
       el('span', { class: 'fila-plato__cuerpo' }, [
         el('span', { class: 'fila-plato__nombre', text: plato.nombre }),

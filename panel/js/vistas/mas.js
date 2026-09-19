@@ -59,7 +59,7 @@ export function mas(contenedor, estado, { alSalir }) {
 
 function pantalla(estado, u, { alSalir, repintar }) {
   return el('div', { class: 'pantalla' }, [
-    cabecera('Más'),
+    cabecera(esAdmin() ? 'Más' : 'Cuenta'),
     el('div', { class: 'pantalla__scroll' }, [
       el('div', { class: 'margen margen--alto' }, [
 

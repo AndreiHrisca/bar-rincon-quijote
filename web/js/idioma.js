@@ -16,6 +16,8 @@ const TEXTOS = {
   es: {
     carta: 'Carta',
     verCarta: 'Ver la carta',
+    verComida: 'Ver comida',
+    verBebidas: 'Ver bebidas',
     reservar: 'Reservar mesa',
     buscarPlato: 'Buscar un plato',
     limpiar: 'Limpiar la búsqueda',
@@ -84,6 +86,8 @@ const TEXTOS = {
   en: {
     carta: 'Menu',
     verCarta: 'See the menu',
+    verComida: 'See food',
+    verBebidas: 'See drinks',
     reservar: 'Book a table',
     buscarPlato: 'Search a dish',
     limpiar: 'Clear search',

@@ -115,7 +115,7 @@ function pantalla(estado, vista, acc) {
       ]),
     ]),
 
-    nav('/mas'),
+    nav(esAdmin() ? '/mas' : '/almacen'),
   ])
 }
 

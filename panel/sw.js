@@ -38,7 +38,7 @@
  * que el service worker viejo se vaya y se limpien sus cachés.
  */
 
-const VERSION = 'v2'
+const VERSION = 'v3'
 const CACHE_APP = `quijote-panel-${VERSION}`
 const CACHE_DATOS = `quijote-datos-${VERSION}`
 
@@ -53,6 +53,7 @@ const CACHE_DATOS = `quijote-datos-${VERSION}`
 const ESQUELETO = [
   '/panel/',
   '/panel/index.html',
+  '/panel/js/permisos.js',
   '/panel/css/panel.css',
   '/panel/manifest.webmanifest',
   '/panel/img/icono-192.png',

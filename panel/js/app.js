@@ -16,7 +16,8 @@
  */
 
 import { registrar, arrancar, ir, resolver, rutaActual } from './enrutador.js'
-import { haySesion, refrescar, alCambiarSesion } from './sesion.js'
+import { puedeAcceder } from './permisos.js'
+import { haySesion, refrescar, alCambiarSesion, rol } from './sesion.js'
 import { cerrarHoja } from './piezas/hoja.js'
 import { ajustes as cargarAjustes } from './datos.js'
 import { acceso } from './vistas/acceso.js'
@@ -129,7 +130,11 @@ registrar('*', conSesion((ruta) => {
 }))
 
 function conSesion(vista) {
-  return (...args) => (haySesion() ? vista(...args) : aAcceso())
+  return (...args) => {
+    if (!haySesion()) return aAcceso()
+    if (!puedeAcceder(rol(), rutaActual())) return ir('/almacen', { reemplazar: true })
+    return vista(...args)
+  }
 }
 
 function aAcceso() {
@@ -159,6 +164,7 @@ async function cargarAjustesSiHace() {
 // ---------------------------------------------------------------------------
 alCambiarSesion(() => {
   if (!haySesion()) {
+    estado.carta = null
     estado.ajustes = null
     estado.almacen = null
     estado.avisos = null

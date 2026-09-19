@@ -1187,3 +1187,33 @@ textarea.input { min-height: 80px; resize: vertical; }
   height: var(--toque-min);
   flex: none;
 }
+
+/* Accesos directos a la carta, con el mismo peso y área de toque. */
+.acciones__carta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.acciones__carta .btn { padding-inline: 10px; }
+#comida, #bebidas { scroll-margin-top: 76px; }
+.btn:focus-visible { outline: 3px solid var(--granate); outline-offset: 4px; }
+@media (hover: hover) { .btn--primario:hover { background: var(--granate-osc); } }
+@media (max-width: 319px) { .acciones__carta { grid-template-columns: 1fr; } }
+
+/* La portada aprovecha el escritorio; formularios y carta conservan su medida
+   de lectura. El contenedor nunca crece más allá de 1280 px. */
+@media (min-width: 900px) {
+  #app:has(> .portada) {
+    max-width: 1280px;
+    min-height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    padding: 28px;
+    gap: 24px 32px;
+  }
+  .portada { padding: 28px 24px 36px; }
+  .portada__logo { width: 145px; }
+  .acciones { padding: 24px; }
+  .separador-onda { grid-column: 1 / -1; margin: 0 12px; }
+  .info { padding: 0 16px; }
+  .info__fila { padding-block: 12px; }
+  .destacado { margin: 0 24px; padding: 24px; }
+  .pie { grid-column: 1 / -1; padding-block: 14px; }
+}

@@ -11,7 +11,7 @@
  * DOS ROLES Y NADA MAS (migracion 1757200000_rol_administrador.js):
  *
  *   admin     Todo. Es quien administra el negocio.
- *   empleado  El trabajo del turno: reservas y carta enteras, apuntar y
+ *   empleado  El trabajo del turno: reservas, carta de solo lectura, apuntar y
  *             resolver faltas, fichar y ver SUS horas.
  *
  * Antes habia cuatro —dueno, encargado, cocina y empleado— y no los usaba
@@ -69,9 +69,9 @@ export function gestionaReservas() {
   return haySesion()
 }
 
-/** Quien puede editar la carta: ver los platos, cambiarlos y ocultarlos. */
+/** Solo el administrador crea, edita, reordena u oculta platos y categorías. */
 export function gestionaCarta() {
-  return haySesion()
+  return esAdmin()
 }
 
 /**

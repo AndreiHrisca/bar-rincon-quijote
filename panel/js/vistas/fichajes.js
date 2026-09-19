@@ -123,7 +123,7 @@ function pantalla(estado, vista, acc) {
         : null,
       { icono: 'descargar', titulo: 'Informe de horas del mes', activo: true, alPulsar: acc.informe },
     ], {
-      volver: { titulo: 'Volver al cuadrante', alPulsar: () => ir('/personal') },
+      volver: esAdmin() ? { titulo: 'Volver al cuadrante', alPulsar: () => ir('/personal') } : null,
     }),
 
     el('div', { class: 'pantalla__scroll' }, [
@@ -143,7 +143,7 @@ function pantalla(estado, vista, acc) {
       ]),
     ]),
 
-    nav('/personal'),
+    nav(esAdmin() ? '/personal' : '/personal/fichajes'),
   ])
 }
 

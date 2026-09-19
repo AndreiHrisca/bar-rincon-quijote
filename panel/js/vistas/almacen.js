@@ -142,7 +142,7 @@ function pantalla(estado, vista, acc) {
       vista.buscando ? busqueda(estado, vista, acc) : listado(estado, vista, acc),
     ]),
 
-    nav('/mas'),
+    nav(mantieneAlmacen() ? '/mas' : '/almacen'),
   ])
 }
 

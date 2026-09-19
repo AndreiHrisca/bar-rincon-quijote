@@ -16,7 +16,7 @@ import { t, campo, nombreAlergeno } from '../idioma.js'
 import { precio, normalizar } from '../formato.js'
 import { abrirFicha } from './ficha.js'
 import { urlFoto } from '../api.js'
-import { ir } from '../enrutador.js'
+import { seccionCategoria } from '/compartido/js/secciones-carta.js'
 // El texto del ingrediente extra se compone en un solo sitio: la ficha del plato
 // lo enseña tambien, con otra pinta pero con las mismas palabras.
 import { textoExtraBreve } from '../etiquetas.js'
@@ -32,6 +32,11 @@ let nodoChips = null
 
 export function carta(contenedor, { carta: cartaDatos, sinConexion }) {
   datos = cartaDatos
+  const destino = location.hash.slice(1)
+  if (['comida', 'bebidas'].includes(destino)) {
+    filtros.categoria = null
+    filtros.busqueda = ''
+  }
 
   nodoChips = el('div', { class: 'chips', role: 'tablist', 'aria-label': t('carta') })
   nodoLista = el('div', { class: 'carta__lista' })
@@ -50,6 +55,12 @@ export function carta(contenedor, { carta: cartaDatos, sinConexion }) {
 
   pintarChips()
   pintarPlatos()
+  // Se ejecuta también tras recibir los datos o recuperar la carta sin conexión.
+  requestAnimationFrame(() => {
+    if (contenedor.contains(nodoLista) && location.pathname === '/carta') {
+      document.getElementById(destino)?.scrollIntoView({ block: 'start' })
+    }
+  })
 }
 
 function barraSuperior() {
@@ -177,7 +188,13 @@ function pintarPlatos() {
   const sueltos = visibles.filter((p) => !datos.categorias.some((c) => c.id === p.categoria))
   if (sueltos.length) secciones.push({ categoria: null, platos: sueltos })
 
-  pintar(nodoLista, ...secciones.map(seccion))
+  const anclas = new Set()
+  pintar(nodoLista, ...secciones.map((grupo) => {
+    const tipo = seccionCategoria(grupo.categoria)
+    const nodo = seccion(grupo)
+    if (!anclas.has(tipo)) { nodo.id = tipo; anclas.add(tipo) }
+    return nodo
+  }))
 }
 
 function seccion({ categoria, platos }) {

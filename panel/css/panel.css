@@ -2332,3 +2332,20 @@ body.sin-scroll { overflow: hidden; }
   max-width: var(--ancho-max);
   margin-inline: auto;
 }
+
+/* Contenido flexible sin ampliar los diálogos hasta el ancho de la pantalla. */
+.cabecera__titulo, .fila-ir__cuerpo, .grupo__nombre { min-width: 0; overflow-wrap: anywhere; }
+.campos-dos > *, .campos-tres > * { min-width: 0; }
+@media (min-width: 1000px) {
+  #app { max-width: 1280px; }
+  .pantalla__scroll > .margen { padding-inline: 32px; }
+  .cabecera { padding-inline: 32px; }
+  .nav { padding-inline: 32px; }
+  .nav__ir { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .nav__ir .ic { margin: 0; }
+  .hoja { max-width: 720px; }
+}
+@media (min-width: 1000px) {
+  .acceso { flex: none; width: 100%; max-width: 640px; margin-inline: auto; min-height: 100%; }
+  .formulario { max-width: 960px; width: 100%; margin-inline: auto; }
+}
